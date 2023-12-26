@@ -38,7 +38,7 @@ public abstract class Game {
     }
 
     public int playOneRound() {
-        while (!RoundIsOver()){
+        while (true){
             Player currentPlayer = players.get(currentPlayerPosition);
             if(currentPlayer.penalty != Penalty.NONE){
                 processPenalty(currentPlayer.penalty);
@@ -47,7 +47,14 @@ public abstract class Game {
             }
             currentPlayer.showCards();
             int chosenCardIndex = readCardNumber(new Scanner(System.in));
-            discardPile.add(currentPlayer.playCard(chosenCardIndex));
+            Card chosenCard = currentPlayer.playCard(chosenCardIndex);
+            discardPile.add(chosenCard);
+            if (currentPlayer.getCards().size() == 0){
+
+            }
+            if(!(chosenCard instanceof NumberedCard)){
+                processAction(chosenCard)
+            }
         }
     }
 
@@ -231,9 +238,9 @@ public abstract class Game {
         for(int i = 0 ; i < Color.values().length-1; i++){
             Color currentColor = Color.values()[i];
             for(int j = 0 ; j < 2 ; j++){
-            NormalActionCards.add(new NormalActionCard(currentColor, Action.REVERSE,20));
-            NormalActionCards.add(new NormalActionCard(currentColor,Action.SKIP,20));
-            NormalActionCards.add(new NormalActionCard(currentColor,Action.DRAW_2,20));
+            NormalActionCards.add(new NormalActionCard(currentColor, NormalAction.REVERSE,20));
+            NormalActionCards.add(new NormalActionCard(currentColor, NormalAction.SKIP,20));
+            NormalActionCards.add(new NormalActionCard(currentColor, NormalAction.DRAW_2,20));
             }
         }
         return NormalActionCards;

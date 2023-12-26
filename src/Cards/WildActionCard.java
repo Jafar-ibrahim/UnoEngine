@@ -2,16 +2,16 @@ package Cards;
 
 import Enums.*;
 
-public class WildActionCard extends Card{
+public class WildActionCard extends ActionCard{
 
     private final WildAction wildAction;
 
     public WildActionCard(WildAction wildAction,int value) {
-        super(Color.ALL,value);
+        super(Color.ALL,wildAction,value);
         this.wildAction = wildAction;
     }
 
-    public WildAction getWildAction() {
+    public Action getAction() {
         return wildAction;
     }
 
@@ -22,6 +22,6 @@ public class WildActionCard extends Card{
 
     @Override
     public void print() {
-        System.out.println("Wild Card | "+getWildAction().toString());
+        System.out.println("Wild Card | "+ getAction().toString());
     }
 }

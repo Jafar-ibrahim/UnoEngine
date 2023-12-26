@@ -2,16 +2,16 @@ package Cards;
 
 import Enums.*;
 
-public class NormalActionCard extends Card {
+public class NormalActionCard extends ActionCard {
 
-    private final Action action;
-    public NormalActionCard(Color color, Action action , int value) {
-        super(color,value);
-        this.action = action;
+    private final NormalAction normalAction;
+    public NormalActionCard(Color color, NormalAction normalAction, int value) {
+        super(color,normalAction,value);
+        this.normalAction = normalAction;
     }
 
-    public Action getAction() {
-        return action;
+    public NormalAction getAction() {
+        return normalAction;
     }
 
     @Override
