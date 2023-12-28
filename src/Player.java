@@ -31,8 +31,8 @@ public class Player {
         return points;
     }
 
-    public void setPoints(int points) {
-        this.points = points;
+    public void addPoints(int points) {
+        this.points += points;
     }
 
     public ArrayList<Card> getCards() {
@@ -45,21 +45,19 @@ public class Player {
     public int getNumberOfCards() {
         return this.cards.size();
     }
-    public boolean hasMatchingCard(Card topCard){
+    /*public boolean hasMatchingCard(Card topCard){
         boolean answer = false;
         for(Card playerCard : cards){
-            answer |= playerCard.canBePlayed(topCard);
+            answer |= playerCard.matches(topCard);
         }
         return answer;
-    }
+    }*/
 
     public void drawCards(List<Card> cards) {
         this.cards.addAll(cards);
     }
-    public Card playCard(int cardIndex){
-        Card playedCard = cards.get(cardIndex);
-        cards.remove(cardIndex);
-        return playedCard;
+    public void playCard(Card card){
+        cards.remove(card);
     }
     public void showCards() {
         System.out.println("Player ("+getName()+")'s cards : ");

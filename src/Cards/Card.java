@@ -26,7 +26,7 @@ public abstract class Card {
         this.value = value;
     }
 
-    public abstract boolean canBePlayed(Card topCard);
+    //public abstract boolean matches(Card topCard);
     public abstract void print();
 
 }
