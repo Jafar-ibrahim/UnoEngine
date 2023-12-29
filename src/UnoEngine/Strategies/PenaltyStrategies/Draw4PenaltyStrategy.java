@@ -10,6 +10,5 @@ public class Draw4PenaltyStrategy implements PenaltiesApplicationStrategy{
         Player targetPlayer = game.getPlayers().get(game.getCurrentPlayerPosition());
         targetPlayer.drawCards(game.giveCards(4,game.getDrawPile()));
         System.out.println("[Action]    "+game.getCurrentPlayer().getName() +" drew 4 cards");
-        game.processPenalty(Penalty.SKIP);
     }
 }
