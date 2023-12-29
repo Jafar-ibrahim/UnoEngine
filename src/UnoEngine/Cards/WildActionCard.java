@@ -7,7 +7,7 @@ public class WildActionCard extends ActionCard{
     private WildAction wildAction;
 
     public WildActionCard(WildAction wildAction,int value) {
-        super(Color.ALL,value);
+        super(Color.WILD_COLOR,value);
         this.wildAction = wildAction;
     }
     @Override
@@ -20,7 +20,7 @@ public class WildActionCard extends ActionCard{
     }
     @Override
     public void print() {
-        if (getColor() == Color.ALL)
+        if (getColor() == Color.WILD_COLOR)
             System.out.println("Wild Card     | "+ getAction().toString());
         else
             System.out.println("Wild Card     | "+ getColor());
