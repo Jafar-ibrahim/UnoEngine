@@ -2,6 +2,8 @@ package UnoEngine.GameVariations;
 import UnoEngine.Cards.*;
 import UnoEngine.Enums.*;
 import UnoEngine.Player;
+import UnoEngine.Strategies.CardDealingStrategies.CardDealingStrategy;
+import UnoEngine.Strategies.CardDealingStrategies.StandardCardDealingStrategy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,17 +12,14 @@ public class StandardUno extends Game{
     public StandardUno() {
         super();
     }
-
     @Override
     protected CardFactory createNumberedCardFactory() {
         return new NumberedCardFactory();
     }
-
     @Override
     protected CardFactory createNormalActionCardFactory() {
         return new NormalActionCardFactory();
     }
-
     @Override
     protected CardFactory createWildActionCardFactory() {
         return new WildActionCardFactory();
@@ -40,7 +39,6 @@ public class StandardUno extends Game{
                 }
             }
         }
-
         // Create normal action cards (Skip, Reverse, Draw 2)
         for (Color color : Color.values()) {
             if (color != Color.WILD_COLOR) {
@@ -50,7 +48,6 @@ public class StandardUno extends Game{
                 }
             }
         }
-
         // Create wild cards (Wild, Wild Draw 4)
         for (WildAction action : WildAction.values()) {
             for (int i = 0 ; i < 4 ; i++){
@@ -58,6 +55,10 @@ public class StandardUno extends Game{
             }
         }
 
+    }
+    @Override
+    protected CardDealingStrategy createDealingStrategy() {
+        return new StandardCardDealingStrategy();
     }
     public int calcRoundPoints(Player winner) {
         int points = 0;
@@ -198,41 +199,5 @@ public class StandardUno extends Game{
         }
         shuffleCards(getUnoDeck());
         System.out.println(getPlayers().get(getCurrentPlayerPosition()).getName() +" starts first ");
-    }
-
-    public List<Card> addNumberedCards(){
-        List<Card> numberedCards = new ArrayList<>();
-
-        for(int i = 0; i < Color.values().length-1; i++){
-            Color currentColor = Color.values()[i];
-            numberedCards.add(new NumberedCard(currentColor,0));
-            for(int j = 1 ; j < 10 ; j++){
-                numberedCards.add(new NumberedCard(currentColor,j));
-                numberedCards.add(new NumberedCard(currentColor,j));
-            }
-        }
-        return numberedCards;
-    }
-    public  List<Card> addNormalActionCards(){
-        List<Card> NormalActionCards = new ArrayList<>();
-        for(int i = 0 ; i < Color.values().length-1; i++){
-            Color currentColor = Color.values()[i];
-            for(int j = 0 ; j < 2 ; j++){
-                NormalActionCards.add(new NormalActionCard(currentColor, NormalAction.REVERSE,20));
-                NormalActionCards.add(new NormalActionCard(currentColor, NormalAction.SKIP,20));
-                NormalActionCards.add(new NormalActionCard(currentColor, NormalAction.DRAW_2,20));
-            }
-        }
-        return NormalActionCards;
-    }
-    public  List<Card> addWildActionCards(){
-        List<Card> WildActionCards = new ArrayList<>();
-        for(int i = 0; i < WildAction.values().length ; i++){
-            WildAction currentWildAction = WildAction.values()[i];
-
-            for(int j = 0 ; j < 4 ; j++)
-                WildActionCards.add(new WildActionCard(currentWildAction,50));
-        }
-        return WildActionCards;
     }
 }

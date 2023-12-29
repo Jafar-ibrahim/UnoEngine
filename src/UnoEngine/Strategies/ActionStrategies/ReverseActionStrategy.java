@@ -14,7 +14,5 @@ public class ReverseActionStrategy implements ActionsApplicationStrategy{
             game.setGameDirection(GameDirection.CLOCKWISE);
 
         System.out.println("[Action]    Game direction got reversed");
-        // if there is only 2 players , then reverse becomes a skip ( according to uno rules )
-        if (game.getNoOfPlayers() == 2) game.processAction(NormalAction.SKIP);
     }
 }
