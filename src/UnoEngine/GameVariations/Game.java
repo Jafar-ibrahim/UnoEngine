@@ -142,11 +142,20 @@ public abstract class Game {
         discardPile.clear();
         discardPile.add(topCard);
     }
-    public void buildUnoDeck(){
+
+    public final void buildUnoDeck() {
+        CardFactory numberedCardFactory = createNumberedCardFactory();
+        CardFactory normalActionCardFactory = createNormalActionCardFactory();
+        CardFactory wildActionCardFactory = createWildActionCardFactory();
+
+        // Subclasses implement this method for custom deck building
+        createDeck(numberedCardFactory, normalActionCardFactory, wildActionCardFactory);
+    }
+    /*public void buildUnoDeck(){
         unoDeck.addAll(addNumberedCards());
         unoDeck.addAll(addNormalActionCards());
         unoDeck.addAll(addWildActionCards());
-    }
+    }*/
     public void instantiatePlayers(){
         Scanner sc = new Scanner(System.in);
         readNoOfPlayers(sc,10);
@@ -170,10 +179,9 @@ public abstract class Game {
             }
             // Check if the player called Uno in time
             if (System.in.available() > 0 && "uno".equalsIgnoreCase(scanner.next())) {
-                System.out.println("Player " + getCurrentPlayer().getName() + " called Uno!");
+                System.out.println("[Announcement]    Player " + getCurrentPlayer().getName() + " called Uno!");
                 return true;
             } else {
-                System.out.println("Player " + getCurrentPlayer().getName() + " didn't call Uno in time. Penalty!");
                 return false;
             }
         }catch (IOException e){
@@ -206,7 +214,7 @@ public abstract class Game {
 
         System.out.printf("--------------------------------%n");
     }
-    public final boolean emergencyDraw(Player currentPlayer , int noCardsToDraw){
+    public final void mandatoryDraw(Player currentPlayer , int noCardsToDraw){
         Scanner sc = new Scanner(System.in);
         System.out.println("You dont have any card that can be played , enter 0 to draw a card : ");
         while((sc.nextInt()) != 0){
@@ -214,10 +222,8 @@ public abstract class Game {
         }
         currentPlayer.drawCards(giveCards(noCardsToDraw,drawPile));
         Card drawnCard = peekTopCard(currentPlayer.getCards());
-        System.out.print(currentPlayer.getName() + " drew a card : \n"+currentPlayer.getNumberOfCards()+" -");
+        System.out.print(currentPlayer.getName() + " drew a card : \n"+currentPlayer.getNumberOfCards()+" - ");
         drawnCard.print();
-
-        return cardCanBePlayed(drawnCard);
     }
     public final Player getCurrentPlayer(){
         return players.get(currentPlayerPosition);
@@ -264,7 +270,12 @@ public abstract class Game {
     }
 
 
-
+    protected abstract void createDeck(CardFactory numberedCardFactory,
+                                       CardFactory normalActionCardFactory,
+                                       CardFactory wildActionCardFactory);
+    protected abstract CardFactory createNumberedCardFactory();
+    protected abstract CardFactory createNormalActionCardFactory();
+    protected abstract CardFactory createWildActionCardFactory();
     public abstract int calcRoundPoints(Player winner);
     public abstract void resetCards();
     public abstract boolean cardCanBePlayed(Card card);

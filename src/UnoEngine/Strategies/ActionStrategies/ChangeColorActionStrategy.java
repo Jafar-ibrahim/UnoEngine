@@ -12,6 +12,6 @@ public class ChangeColorActionStrategy implements ActionsApplicationStrategy {
                 "1-Blue   2-Green   3-Red   4-Yellow");
         int color = game.readIntegerInput(new Scanner(System.in)) -1;
         game.peekTopCard(game.getDiscardPile()).setColor(Color.values()[color]);
-        System.out.println("Color changed to "+Color.values()[color]);
+        System.out.println("[Action]    Color changed to "+Color.values()[color]);
     }
 }

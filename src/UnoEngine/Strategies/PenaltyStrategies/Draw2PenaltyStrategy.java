@@ -9,7 +9,7 @@ public class Draw2PenaltyStrategy implements PenaltiesApplicationStrategy{
     public void applyPenalty(Game game) {
         Player targetPlayer = game.getPlayers().get(game.getCurrentPlayerPosition());
         targetPlayer.drawCards(game.giveCards(2,game.getDrawPile()));
-        System.out.println(game.getCurrentPlayer().getName() +" drew 2 cards");
+        System.out.println("[Action]    "+game.getCurrentPlayer().getName() +" drew 2 cards");
         game.processPenalty(Penalty.SKIP);
     }
 }

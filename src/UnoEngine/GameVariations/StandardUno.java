@@ -10,6 +10,55 @@ public class StandardUno extends Game{
     public StandardUno() {
         super();
     }
+
+    @Override
+    protected CardFactory createNumberedCardFactory() {
+        return new NumberedCardFactory();
+    }
+
+    @Override
+    protected CardFactory createNormalActionCardFactory() {
+        return new NormalActionCardFactory();
+    }
+
+    @Override
+    protected CardFactory createWildActionCardFactory() {
+        return new WildActionCardFactory();
+    }
+
+    @Override
+    protected void createDeck(CardFactory numberedCardFactory,
+                              CardFactory normalActionCardFactory,
+                              CardFactory wildActionCardFactory) {
+        // Create numbered cards
+        for (Color color : Color.values()) {
+            if (color != Color.WILD_COLOR) {
+                getUnoDeck().add(numberedCardFactory.createCard(0, color, null));
+                for (int value = 1; value <= 9; value++) {
+                    getUnoDeck().add(numberedCardFactory.createCard(value, color, null));
+                    getUnoDeck().add(numberedCardFactory.createCard(value, color, null));
+                }
+            }
+        }
+
+        // Create normal action cards (Skip, Reverse, Draw 2)
+        for (Color color : Color.values()) {
+            if (color != Color.WILD_COLOR) {
+                for (NormalAction action : NormalAction.values()) {
+                    getUnoDeck().add(normalActionCardFactory.createCard(20,color, action));
+                    getUnoDeck().add(normalActionCardFactory.createCard(20,color, action));
+                }
+            }
+        }
+
+        // Create wild cards (Wild, Wild Draw 4)
+        for (WildAction action : WildAction.values()) {
+            for (int i = 0 ; i < 4 ; i++){
+                getUnoDeck().add(wildActionCardFactory.createCard(50, null,action));
+            }
+        }
+
+    }
     public int calcRoundPoints(Player winner) {
         int points = 0;
         for(Player player : getPlayers()){
@@ -55,8 +104,9 @@ public class StandardUno extends Game{
 
             printUserInterface();
             if(!playerHasAnyMatchingCards(currentPlayer)){
-                boolean drawnCanBePlayed = emergencyDraw(currentPlayer,1);
-                if (!drawnCanBePlayed) {advanceTurn();continue;}
+                mandatoryDraw(currentPlayer,1);
+                if (!cardCanBePlayed(peekTopCard(getCurrentPlayer().getCards())))
+                    {advanceTurn();continue;}
             }
             int chosenCardIndex = readCardIndex(new Scanner(System.in)) - 1;
             Card chosenCard = currentPlayer.getCards().get(chosenCardIndex);

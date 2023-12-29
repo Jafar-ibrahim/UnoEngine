@@ -2,10 +2,11 @@ package UnoEngine.Cards;
 
 import UnoEngine.Enums.Action;
 import UnoEngine.Enums.Color;
+import UnoEngine.Enums.WildAction;
 
-public class NumberedCardFactory implements CardFactory{
+public class WildActionCardFactory implements CardFactory{
     @Override
     public Card createCard(int value, Color color, Action action) {
-        return new NumberedCard(color,value);
+        return new WildActionCard((WildAction) action,value);
     }
 }
