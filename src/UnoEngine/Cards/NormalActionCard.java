@@ -1,6 +1,6 @@
-package Cards;
+package UnoEngine.Cards;
 
-import Enums.*;
+import UnoEngine.Enums.*;
 
 public class NormalActionCard extends ActionCard {
 
@@ -9,26 +9,14 @@ public class NormalActionCard extends ActionCard {
         super(color,value);
         this.normalAction = normalAction;
     }
-
     @Override
     public NormalAction getAction() {
         return normalAction;
     }
-
     @Override
     public void setAction(Action action) {
         normalAction = (NormalAction) action;
     }
-
-
-    /*public boolean matches(Card topCard) {
-        if(this.getColor() == topCard.getColor()) return true;
-        if(topCard instanceof NormalActionCard)
-            return this.getAction() == ((NormalActionCard) topCard).getAction();
-
-        return false;
-    }*/
-
     @Override
     public void print() {
         System.out.println("Action Card   | "+getColor().toString()+" | "+getAction().toString());

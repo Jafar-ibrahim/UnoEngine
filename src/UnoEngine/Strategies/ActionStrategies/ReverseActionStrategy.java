@@ -1,8 +1,11 @@
-import Cards.Card;
-import Enums.GameDirection;
-import Enums.Penalty;
+package UnoEngine.Strategies.ActionStrategies;
 
-public class ReverseStrategy implements ActionsApplicationStrategy{
+import UnoEngine.Enums.GameDirection;
+import UnoEngine.Enums.NormalAction;
+import UnoEngine.Enums.Penalty;
+import UnoEngine.GameVariations.Game;
+
+public class ReverseActionStrategy implements ActionsApplicationStrategy{
     @Override
     public void applyAction(Game game) {
         if(game.getGameDirection() == GameDirection.CLOCKWISE)
@@ -12,6 +15,6 @@ public class ReverseStrategy implements ActionsApplicationStrategy{
 
         System.out.println("Game direction got reversed");
         // if there is only 2 players , then reverse becomes a skip ( according to uno rules )
-        if (game.getNoOfPlayers() == 2) game.processPenalty(Penalty.SKIP);
+        if (game.getNoOfPlayers() == 2) game.processAction(NormalAction.SKIP);
     }
 }

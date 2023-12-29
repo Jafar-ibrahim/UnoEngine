@@ -1,5 +1,7 @@
-import Cards.Card;
-import Enums.Penalty;
+package UnoEngine;
+
+import UnoEngine.Cards.Card;
+import UnoEngine.Enums.Penalty;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,50 +11,35 @@ public class Player {
     private String name;
     private int points;
     Penalty penalty;
-    boolean uno;
     private ArrayList<Card> cards;
 
-    Player(String name) {
+    public Player(String name) {
         this.name = name;
         points = 0;
         penalty = Penalty.NONE;
         cards = new ArrayList<>();
     }
-
     public String getName() {
         return name;
     }
-
     public void setName(String name) {
         this.name = name;
     }
-
     public int getPoints() {
         return points;
     }
-
     public void addPoints(int points) {
         this.points += points;
     }
-
     public ArrayList<Card> getCards() {
         return cards;
     }
-
     public void setCards(ArrayList<Card> cards) {
         this.cards.addAll(cards);
     }
     public int getNumberOfCards() {
         return this.cards.size();
     }
-    /*public boolean hasMatchingCard(Card topCard){
-        boolean answer = false;
-        for(Card playerCard : cards){
-            answer |= playerCard.matches(topCard);
-        }
-        return answer;
-    }*/
-
     public void drawCards(List<Card> cards) {
         this.cards.addAll(cards);
     }
@@ -66,20 +53,11 @@ public class Player {
             cards.get(i).print();
         }
     }
-
     public Penalty getPenalty() {
         return penalty;
     }
 
     public void setPenalty(Penalty penalty) {
         this.penalty = penalty;
-    }
-
-    public boolean isUno() {
-        return uno;
-    }
-
-    public void setUno(boolean uno) {
-        this.uno = uno;
     }
 }

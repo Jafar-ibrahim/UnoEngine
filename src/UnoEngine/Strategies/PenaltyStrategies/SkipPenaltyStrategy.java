@@ -1,6 +1,8 @@
-import Enums.Penalty;
+package UnoEngine.Strategies.PenaltyStrategies;
 
-public class SkipStrategy implements PenaltiesApplicationStrategy{
+import UnoEngine.GameVariations.Game;
+
+public class SkipPenaltyStrategy implements PenaltiesApplicationStrategy{
     @Override
     public void applyPenalty(Game game) {
         System.out.println(game.getCurrentPlayer().getName()+" turn is skipped ");

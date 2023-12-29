@@ -1,6 +1,10 @@
-import Enums.Penalty;
+package UnoEngine.Strategies.PenaltyStrategies;
 
-public class Draw2Strategy implements PenaltiesApplicationStrategy{
+import UnoEngine.Enums.Penalty;
+import UnoEngine.GameVariations.Game;
+import UnoEngine.Player;
+
+public class Draw2PenaltyStrategy implements PenaltiesApplicationStrategy{
     @Override
     public void applyPenalty(Game game) {
         Player targetPlayer = game.getPlayers().get(game.getCurrentPlayerPosition());

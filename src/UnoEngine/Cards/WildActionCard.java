@@ -1,6 +1,6 @@
-package Cards;
+package UnoEngine.Cards;
 
-import Enums.*;
+import UnoEngine.Enums.*;
 
 public class WildActionCard extends ActionCard{
 
@@ -10,23 +10,14 @@ public class WildActionCard extends ActionCard{
         super(Color.ALL,value);
         this.wildAction = wildAction;
     }
-
     @Override
     public Action getAction() {
         return wildAction;
     }
-
     @Override
     public void setAction(Action action) {
         wildAction = (WildAction) action;
     }
-
-
-    /*public boolean matches(Card topCard) {
-        if(wildAction == WildAction.CHANGE_COLOR) return true;
-        else return
-    }*/
-
     @Override
     public void print() {
         if (getColor() == Color.ALL)
