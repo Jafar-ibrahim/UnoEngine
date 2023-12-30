@@ -21,7 +21,7 @@ public class PenaltyAssignmentStrategy implements ActionsApplicationStrategy {
                 targetPlayer.setPenalty(Penalty.SKIP);
             else if(action == NormalAction.DRAW_2)
                 targetPlayer.setPenalty(Penalty.DRAW_2);
-            else if (action == WildAction.CHANGE_COLOR_AND_DRAW_4)
+            else if (action == WildAction.WILD_DRAW_4)
                 targetPlayer.setPenalty(Penalty.DRAW_4);
         }
     }

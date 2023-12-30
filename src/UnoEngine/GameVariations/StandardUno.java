@@ -5,8 +5,6 @@ import UnoEngine.Player;
 import UnoEngine.Strategies.CardDealingStrategies.CardDealingStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.StandardCardDealingStrategy;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 public class StandardUno extends Game{
     public StandardUno() {
@@ -44,7 +42,7 @@ public class StandardUno extends Game{
     public boolean cardCanBePlayed(Card card){
         Card topDiscard = peekTopCard(getDiscardPile());
         if(card instanceof WildActionCard){
-            if (((WildActionCard) card).getAction() == WildAction.CHANGE_COLOR_AND_DRAW_4){
+            if (((WildActionCard) card).getAction() == WildAction.WILD_DRAW_4){
                 for (Card otherCard : getCurrentPlayer().getCards())
                     // wild+4 can be only played if no other card can be played
                     if (otherCard != card && cardCanBePlayed(otherCard))

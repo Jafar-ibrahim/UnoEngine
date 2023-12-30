@@ -7,7 +7,6 @@ import UnoEngine.Strategies.ActionStrategies.ActionsApplicationStrategy;
 import UnoEngine.Strategies.ActionStrategies.ChangeColorActionStrategy;
 import UnoEngine.Strategies.ActionStrategies.ReverseActionStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.CardDealingStrategy;
-import UnoEngine.Strategies.CardDealingStrategies.StandardCardDealingStrategy;
 import UnoEngine.Strategies.PenaltyStrategies.*;
 
 import java.io.IOException;
@@ -101,9 +100,9 @@ public abstract class Game {
     protected void processAction(Action action) {
         if(action == NormalAction.REVERSE){
             setActionsApplicationStrategy(new ReverseActionStrategy());
-        }else if(action == WildAction.CHANGE_COLOR || action == WildAction.CHANGE_COLOR_AND_DRAW_4){
+        }else if(action == WildAction.WILD || action == WildAction.WILD_DRAW_4){
             setActionsApplicationStrategy(new ChangeColorActionStrategy());
-            if(action == WildAction.CHANGE_COLOR_AND_DRAW_4){
+            if(action == WildAction.WILD_DRAW_4){
                 actionsApplicationStrategy.applyAction(this);
                 setActionsApplicationStrategy(new PenaltyAssignmentStrategy());
             }
@@ -148,13 +147,7 @@ public abstract class Game {
         discardPile.add(topCard);
     }
 
-    protected final void buildUnoDeck() {/*
-        CardFactory numberedCardFactory = createNumberedCardFactory();
-        CardFactory normalActionCardFactory = createNormalActionCardFactory();
-        CardFactory wildActionCardFactory = createWildActionCardFactory();
-
-        // Subclasses implement this method for custom deck building
-        createDeck(numberedCardFactory, normalActionCardFactory, wildActionCardFactory);*/
+    protected final void buildUnoDeck() {
         DeckBuilder deckBuilder = createDeckBuilder();
         List<Card> deck =
                 deckBuilder
@@ -218,7 +211,7 @@ public abstract class Game {
         Card firstCard = drawAndRemoveCard(getDrawPile());
 
         // First card can't be Wild +4
-        while(firstCard instanceof WildActionCard && ((WildActionCard)firstCard).getAction() == WildAction.CHANGE_COLOR_AND_DRAW_4 ){
+        while(firstCard instanceof WildActionCard && ((WildActionCard)firstCard).getAction() == WildAction.WILD_DRAW_4){
             getDrawPile().add(firstCard);
             shuffleCards(getDrawPile());
             firstCard = drawAndRemoveCard(getDrawPile());
@@ -298,7 +291,7 @@ public abstract class Game {
         Collections.shuffle(unoDeck);
     }
     public final int readIntegerInput(Scanner sc){
-        int input = 0;
+        int input ;
         while(true) {
             try {
                 input = sc.nextInt();
@@ -311,7 +304,6 @@ public abstract class Game {
         }
         return input;
     }
-
     protected abstract CardDealingStrategy createDealingStrategy();
 
     protected abstract int calcRoundPoints(Player winner);
