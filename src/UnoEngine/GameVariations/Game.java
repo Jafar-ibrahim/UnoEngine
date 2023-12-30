@@ -45,7 +45,7 @@ public abstract class Game {
     protected void playRounds() {
         int roundNo = 1;
         while (gameState == GameState.ONGOING){
-            dealCards(7);
+            cardDealingStrategy.dealCards(this,7);
             System.out.println("*********** Round " + roundNo + " started ******************");
 
             playOneRound();
@@ -148,14 +148,25 @@ public abstract class Game {
         discardPile.add(topCard);
     }
 
-    protected final void buildUnoDeck() {
+    protected final void buildUnoDeck() {/*
         CardFactory numberedCardFactory = createNumberedCardFactory();
         CardFactory normalActionCardFactory = createNormalActionCardFactory();
         CardFactory wildActionCardFactory = createWildActionCardFactory();
 
         // Subclasses implement this method for custom deck building
-        createDeck(numberedCardFactory, normalActionCardFactory, wildActionCardFactory);
+        createDeck(numberedCardFactory, normalActionCardFactory, wildActionCardFactory);*/
+        DeckBuilder deckBuilder = createDeckBuilder();
+        List<Card> deck =
+                deckBuilder
+                        .buildNumberedCards()
+                        .buildNormalActionCards()
+                        .buildWildActionCards()
+                        .getDeck();
+        setUnoDeck(deck);
     }
+
+    protected abstract DeckBuilder createDeckBuilder() ;
+
     protected void instantiatePlayers(){
         Scanner sc = new Scanner(System.in);
         readNoOfPlayers(sc,10);
@@ -199,6 +210,36 @@ public abstract class Game {
                 break;
             } else
                 System.out.println("Please enter a number in the range (2-"+maxPlayers+") ");
+        }
+    }
+    public void InitializeThePlay() {
+        getDrawPile().addAll(getUnoDeck());
+        getDiscardPile().clear();
+        Card firstCard = drawAndRemoveCard(getDrawPile());
+
+        // First card can't be Wild +4
+        while(firstCard instanceof WildActionCard && ((WildActionCard)firstCard).getAction() == WildAction.CHANGE_COLOR_AND_DRAW_4 ){
+            getDrawPile().add(firstCard);
+            shuffleCards(getDrawPile());
+            firstCard = drawAndRemoveCard(getDrawPile());
+        }
+        getDiscardPile().add(firstCard);
+        System.out.print("First card put on discard pile is : ");firstCard.print();
+
+        processFirstCardInGame(firstCard);
+
+    }
+    protected void processFirstCardInGame(Card firstCard){
+        // if the first card(drawn from draw pile) is action card , apply it to the first player
+        if(firstCard instanceof NormalActionCard){
+            // in case of potential penalty :
+            // to assign the penalty to the current player, I have to backtrack by one player
+            // cause the method flags the next player with a penalty (not the current one)
+            setCurrentPlayerPosition(Math.floorMod(getCurrentPlayerPosition() -1 , getNoOfPlayers()));
+            processAction(((ActionCard) firstCard).getAction());
+            setCurrentPlayerPosition(Math.floorMod(getCurrentPlayerPosition() +1 ,getNoOfPlayers()));
+        }else if(firstCard instanceof WildActionCard /*only wild basically*/) {
+            processAction(((ActionCard) firstCard).getAction());
         }
     }
 
@@ -271,22 +312,14 @@ public abstract class Game {
         return input;
     }
 
-    protected abstract void createDeck(CardFactory numberedCardFactory,
-                                       CardFactory normalActionCardFactory,
-                                       CardFactory wildActionCardFactory);
-    protected abstract CardFactory createNumberedCardFactory();
-    protected abstract CardFactory createNormalActionCardFactory();
-    protected abstract CardFactory createWildActionCardFactory();
     protected abstract CardDealingStrategy createDealingStrategy();
 
     protected abstract int calcRoundPoints(Player winner);
     protected abstract void resetCards();
     protected abstract boolean cardCanBePlayed(Card card);
     protected abstract void playOneRound();
-    protected abstract void InitializeThePlay();
     protected abstract void decidePointsToWin();
     protected abstract void decideInitialGameDirection();
-    protected abstract void dealCards(int noOfCardsEach);
     protected abstract void decideWhoStarts();
     public List<Player> getPlayers() {
         return players;
@@ -322,6 +355,18 @@ public abstract class Game {
 
     public void setRoundState(GameState roundState) {
         this.roundState = roundState;
+    }
+
+    public void setUnoDeck(List<Card> unoDeck) {
+        this.unoDeck = unoDeck;
+    }
+
+    public void setDrawPile(List<Card> drawPile) {
+        this.drawPile = drawPile;
+    }
+
+    public void setDiscardPile(List<Card> discardPile) {
+        this.discardPile = discardPile;
     }
 
     public List<Card> getUnoDeck() {
