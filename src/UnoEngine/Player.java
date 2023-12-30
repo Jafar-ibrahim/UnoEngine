@@ -11,7 +11,7 @@ public class Player {
     private String name;
     private int points;
     Penalty penalty;
-    private ArrayList<Card> cards;
+    private List<Card> cards;
 
     public Player(String name) {
         this.name = name;
@@ -31,12 +31,14 @@ public class Player {
     public void addPoints(int points) {
         this.points += points;
     }
-    public ArrayList<Card> getCards() {
+    public List<Card> getCards() {
         return cards;
     }
-    public void setCards(ArrayList<Card> cards) {
-        this.cards.addAll(cards);
+
+    public void setCards(List<Card> cards) {
+        this.cards = cards;
     }
+
     public int getNumberOfCards() {
         return this.cards.size();
     }

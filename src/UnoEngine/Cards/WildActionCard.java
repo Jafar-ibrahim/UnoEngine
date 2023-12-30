@@ -4,9 +4,9 @@ import UnoEngine.Enums.*;
 
 public class WildActionCard extends ActionCard{
 
-    private WildAction wildAction;
+    private Action wildAction;
 
-    public WildActionCard(WildAction wildAction,int value) {
+    public WildActionCard(Action wildAction,int value) {
         super(Color.WILD_COLOR,value);
         this.wildAction = wildAction;
     }
@@ -16,7 +16,7 @@ public class WildActionCard extends ActionCard{
     }
     @Override
     public void setAction(Action action) {
-        wildAction = (WildAction) action;
+        wildAction = action;
     }
     @Override
     public void print() {

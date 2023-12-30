@@ -23,20 +23,20 @@ public abstract class Game {
     private PenaltiesApplicationStrategy penaltiesApplicationStrategy;
     private CardDealingStrategy cardDealingStrategy;
 
-    public Game() {
+    public Game(int pointsToWin , GameDirection gameDirection) {
         unoDeck = new ArrayList<>();
         drawPile = new ArrayList<>();
         discardPile = new ArrayList<>();
         players = new ArrayList<>();
         gameState = GameState.ONGOING;
+        this.pointsToWin = pointsToWin;
+        this.gameDirection = gameDirection;
     }
     public final void play(){
         buildUnoDeck();
         instantiatePlayers();
         shuffleCards(unoDeck);
-        decidePointsToWin();
         decideWhoStarts();
-        decideInitialGameDirection();
         decideDealingStrategy();
         playRounds();
         announceGameResult();
@@ -60,15 +60,8 @@ public abstract class Game {
     protected int readCardIndex(Scanner sc) {
         System.out.println("Please enter the index of the card you want to play : \n" +
                 "Note: if you have only 1 card left, immediately type \"uno\"(without double quotes) on a new line.");
-        int card = 0;
-        while(true) {
-            card = readIntegerInput(sc);
-            Player currentPlayer = getPlayers().get(getCurrentPlayerPosition());
-            if (card >= 1 && card <= currentPlayer.getNumberOfCards()) {
-                return card;
-            } else
-                System.out.println("Please enter a number in the range (1"+"-"+currentPlayer.getNumberOfCards()+") ");
-        }
+        int card = readIntegerInput(1,getCurrentPlayer().getNumberOfCards(),sc);
+        return card;
     }
     protected void announceRoundResult() {
         if (getRoundState() == GameState.A_PLAYER_WON) {
@@ -97,35 +90,14 @@ public abstract class Game {
         return false;
     }
 
-    protected void processAction(Action action) {
-        if(action == NormalAction.REVERSE){
-            setActionsApplicationStrategy(new ReverseActionStrategy());
-        }else if(action == WildAction.WILD || action == WildAction.WILD_DRAW_4){
-            setActionsApplicationStrategy(new ChangeColorActionStrategy());
-            if(action == WildAction.WILD_DRAW_4){
-                actionsApplicationStrategy.applyAction(this);
-                setActionsApplicationStrategy(new PenaltyAssignmentStrategy());
-            }
-        }else
-            setActionsApplicationStrategy(new PenaltyAssignmentStrategy());
-
-        actionsApplicationStrategy.applyAction(this);
-    }
-    protected void processPenalty(Penalty penalty) {
-        getCurrentPlayer().setPenalty(Penalty.NONE);
-
-        if(penalty == Penalty.DRAW_2){
-            setPenaltiesApplicationStrategy(new Draw2PenaltyStrategy());
-        }else if(penalty == Penalty.DRAW_4){
-            setPenaltiesApplicationStrategy(new Draw4PenaltyStrategy());
-        } else if (penalty == Penalty.FORGOT_UNO)
-            setPenaltiesApplicationStrategy(new ForgotUnoPenaltyStrategy());
-        if (penalty == Penalty.SKIP || penalty == Penalty.DRAW_2 || penalty == Penalty.DRAW_4) {
-            setPenaltiesApplicationStrategy(new SkipPenaltyStrategy());
+    protected void checkForUno(){
+        if (getCurrentPlayer().getNumberOfCards() == 1){
+            if (!saidUno(4000))
+                processPenalty(Penalty.FORGOT_UNO);
         }
-
-        penaltiesApplicationStrategy.applyPenalty(this);
     }
+    protected abstract void processAction(Action action);
+    protected abstract void processPenalty(Penalty penalty);
     public int getNextPlayerIndex(){
         if(gameDirection == GameDirection.CLOCKWISE)
             return Math.floorMod(currentPlayerPosition - 1 , noOfPlayers);
@@ -160,6 +132,12 @@ public abstract class Game {
 
     protected abstract DeckBuilder createDeckBuilder() ;
 
+    protected void resetCards() {
+        for(Player player : getPlayers())
+            getUnoDeck().addAll(player.getCards());
+        getUnoDeck().addAll(getDiscardPile());
+        getUnoDeck().addAll(getDrawPile());
+    }
     protected void instantiatePlayers(){
         Scanner sc = new Scanner(System.in);
         readNoOfPlayers(sc,10);
@@ -195,15 +173,8 @@ public abstract class Game {
 
     protected void readNoOfPlayers(Scanner sc, int maxPlayers){
         System.out.println("Enter the number of players (2-"+maxPlayers+") : ");
-        int num = 0;
-        while(true) {
-            num = readIntegerInput(sc);
-            if (num >= 2 && num <= 10) {
-                setNoOfPlayers(num);
-                break;
-            } else
-                System.out.println("Please enter a number in the range (2-"+maxPlayers+") ");
-        }
+        int num = readIntegerInput(2,maxPlayers,sc);
+        setNoOfPlayers(num);
     }
     public void InitializeThePlay() {
         getDrawPile().addAll(getUnoDeck());
@@ -219,7 +190,8 @@ public abstract class Game {
         getDiscardPile().add(firstCard);
         System.out.print("First card put on discard pile is : ");firstCard.print();
 
-        processFirstCardInGame(firstCard);
+        if(firstCard instanceof ActionCard)
+            processFirstCardInGame(firstCard);
 
     }
     protected void processFirstCardInGame(Card firstCard){
@@ -290,14 +262,17 @@ public abstract class Game {
     public final void shuffleCards(List<Card> unoDeck) {
         Collections.shuffle(unoDeck);
     }
-    public final int readIntegerInput(Scanner sc){
+    public final int readIntegerInput(int min , int max,Scanner sc){
         int input ;
         while(true) {
             try {
                 input = sc.nextInt();
-                break;
+                if (input >= min && input <= max)
+                    break;
+                else
+                    System.out.println("Please enter a number in the specified range("+min+"-"+max+")");
             } catch (InputMismatchException e) {
-                System.out.println("Invalid input format , please enter a number");
+                System.out.println("Invalid input format , please enter a number :");
             }finally {
                 sc.nextLine();
             }
@@ -307,11 +282,8 @@ public abstract class Game {
     protected abstract CardDealingStrategy createDealingStrategy();
 
     protected abstract int calcRoundPoints(Player winner);
-    protected abstract void resetCards();
     protected abstract boolean cardCanBePlayed(Card card);
     protected abstract void playOneRound();
-    protected abstract void decidePointsToWin();
-    protected abstract void decideInitialGameDirection();
     protected abstract void decideWhoStarts();
     public List<Player> getPlayers() {
         return players;
@@ -379,6 +351,15 @@ public abstract class Game {
     public void setActionsApplicationStrategy(ActionsApplicationStrategy actionsApplicationStrategy) {
         this.actionsApplicationStrategy = actionsApplicationStrategy;
     }
+
+    public ActionsApplicationStrategy getActionsApplicationStrategy() {
+        return actionsApplicationStrategy;
+    }
+
+    public PenaltiesApplicationStrategy getPenaltiesApplicationStrategy() {
+        return penaltiesApplicationStrategy;
+    }
+
     public void setPenaltiesApplicationStrategy(PenaltiesApplicationStrategy penaltiesApplicationStrategy) {
         this.penaltiesApplicationStrategy = penaltiesApplicationStrategy;
     }

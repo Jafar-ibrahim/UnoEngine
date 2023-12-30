@@ -4,18 +4,18 @@ import UnoEngine.Enums.*;
 
 public class NormalActionCard extends ActionCard {
 
-    private NormalAction normalAction;
-    public NormalActionCard(Color color, NormalAction normalAction, int value) {
+    private Action normalAction;
+    public NormalActionCard(Color color, Action normalAction, int value) {
         super(color,value);
         this.normalAction = normalAction;
     }
     @Override
-    public NormalAction getAction() {
+    public Action getAction() {
         return normalAction;
     }
     @Override
     public void setAction(Action action) {
-        normalAction = (NormalAction) action;
+        normalAction = action;
     }
     @Override
     public void print() {

@@ -17,7 +17,7 @@ public class PenaltyAssignmentStrategy implements ActionsApplicationStrategy {
         if(card instanceof ActionCard){
             Action action = ((ActionCard)card).getAction();
             // if there is only 2 players , then reverse becomes a skip ( according to uno rules )
-            if(action == NormalAction.SKIP || action ==NormalAction.REVERSE && game.getNoOfPlayers() == 2)
+            if(action == NormalAction.SKIP || action == NormalAction.REVERSE && game.getNoOfPlayers() == 2)
                 targetPlayer.setPenalty(Penalty.SKIP);
             else if(action == NormalAction.DRAW_2)
                 targetPlayer.setPenalty(Penalty.DRAW_2);

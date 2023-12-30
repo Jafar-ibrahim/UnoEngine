@@ -2,13 +2,16 @@ package UnoEngine.GameVariations;
 import UnoEngine.Cards.*;
 import UnoEngine.Enums.*;
 import UnoEngine.Player;
+import UnoEngine.Strategies.ActionStrategies.ChangeColorActionStrategy;
+import UnoEngine.Strategies.ActionStrategies.ReverseActionStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.CardDealingStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.StandardCardDealingStrategy;
+import UnoEngine.Strategies.PenaltyStrategies.*;
 
 import java.util.Scanner;
 public class StandardUno extends Game{
-    public StandardUno() {
-        super();
+    public StandardUno(int pointsToWin , GameDirection gameDirection) {
+        super(pointsToWin,gameDirection);
     }
 
     @Override
@@ -30,13 +33,6 @@ public class StandardUno extends Game{
         }
         System.out.println("Winner got  : "+points+" points !");
         return points;
-    }
-    @Override
-    public void resetCards() {
-        for(Player player : getPlayers())
-            getUnoDeck().addAll(player.getCards());
-        getUnoDeck().addAll(getDiscardPile());
-        getUnoDeck().addAll(getDrawPile());
     }
     @Override
     public boolean cardCanBePlayed(Card card){
@@ -93,6 +89,37 @@ public class StandardUno extends Game{
             advanceTurn();
         }
     }
+    @Override
+    protected void processAction(Action action) {
+        if(action == NormalAction.REVERSE){
+            setActionsApplicationStrategy(new ReverseActionStrategy());
+            getActionsApplicationStrategy().applyAction(this);
+
+        }else if(action == WildAction.WILD || action == WildAction.WILD_DRAW_4){
+            setActionsApplicationStrategy(new ChangeColorActionStrategy());
+            getActionsApplicationStrategy().applyAction(this);
+
+        }
+
+        setActionsApplicationStrategy(new PenaltyAssignmentStrategy());
+        getActionsApplicationStrategy().applyAction(this);
+    }
+    @Override
+    protected void processPenalty(Penalty penalty) {
+        getCurrentPlayer().setPenalty(Penalty.NONE);
+
+        if(penalty == Penalty.DRAW_2){
+            setPenaltiesApplicationStrategy(new Draw2PenaltyStrategy());
+        }else if(penalty == Penalty.DRAW_4){
+            setPenaltiesApplicationStrategy(new Draw4PenaltyStrategy());
+        } else if (penalty == Penalty.FORGOT_UNO)
+            setPenaltiesApplicationStrategy(new ForgotUnoPenaltyStrategy());
+        if (penalty == Penalty.SKIP || penalty == Penalty.DRAW_2 || penalty == Penalty.DRAW_4) {
+            setPenaltiesApplicationStrategy(new SkipPenaltyStrategy());
+        }
+
+        getPenaltiesApplicationStrategy().applyPenalty(this);
+    }
 
     public void printUserInterface(){
         Card topDiscard = peekTopCard(getDiscardPile());
@@ -105,21 +132,7 @@ public class StandardUno extends Game{
             processPenalty(getCurrentPlayer().getPenalty());
         }
     }
-    public void checkForUno(){
-        if (getCurrentPlayer().getNumberOfCards() == 1){
-            if (!saidUno(4000))
-                processPenalty(Penalty.FORGOT_UNO);
-        }
-    }
 
-    @Override
-    public void decidePointsToWin() {
-        setPointsToWin(1);
-    }
-    @Override
-    public void decideInitialGameDirection() {
-        setGameDirection(GameDirection.CLOCKWISE);
-    }
     @Override
     public void decideWhoStarts(){
         int max = 0;
