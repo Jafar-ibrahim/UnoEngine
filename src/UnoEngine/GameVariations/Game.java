@@ -4,8 +4,6 @@ import UnoEngine.Cards.*;
 import UnoEngine.Enums.*;
 import UnoEngine.Player;
 import UnoEngine.Strategies.ActionStrategies.ActionsApplicationStrategy;
-import UnoEngine.Strategies.ActionStrategies.ChangeColorActionStrategy;
-import UnoEngine.Strategies.ActionStrategies.ReverseActionStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.CardDealingStrategy;
 import UnoEngine.Strategies.PenaltyStrategies.*;
 
@@ -13,10 +11,12 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 public abstract class Game {
+    String name;
     private List<Card> unoDeck, drawPile, discardPile;
     private int noOfPlayers , pointsToWin;
     private final List<Player> players;
     private int currentPlayerPosition;
+    private Color currentColor;
     private GameDirection gameDirection;
     private GameState gameState , roundState;
     private ActionsApplicationStrategy actionsApplicationStrategy;
@@ -34,6 +34,7 @@ public abstract class Game {
     }
     public final void play(){
         buildUnoDeck();
+        greetPlayers();
         instantiatePlayers();
         shuffleCards(unoDeck);
         decideWhoStarts();
@@ -41,10 +42,15 @@ public abstract class Game {
         playRounds();
         announceGameResult();
     }
+
+    /*-----------------------Non-Final Methods--------------------*/
+    protected void greetPlayers(){
+        System.out.println("Welcome to ("+getName()+") Game !!");
+    }
     protected void playRounds() {
         int roundNo = 1;
         while (gameState == GameState.ONGOING){
-            cardDealingStrategy.dealCards(this,7);
+            cardDealingStrategy.dealCards(this,4);
             System.out.println("*********** Round " + roundNo + " started ******************");
 
             playOneRound();
@@ -89,20 +95,22 @@ public abstract class Game {
 
         return false;
     }
-
     protected void checkForUno(){
         if (getCurrentPlayer().getNumberOfCards() == 1){
             if (!saidUno(4000))
-                processPenalty(Penalty.FORGOT_UNO);
+                processPenalty(StandardPenalty.FORGOT_UNO);
         }
     }
-    protected abstract void processAction(Action action);
-    protected abstract void processPenalty(Penalty penalty);
-    public int getNextPlayerIndex(){
+    public int getNextPlayerIndex(int InTurnsFromNow){
+        int targetPlayer = currentPlayerPosition;
         if(gameDirection == GameDirection.CLOCKWISE)
-            return Math.floorMod(currentPlayerPosition - 1 , noOfPlayers);
+            while(InTurnsFromNow-- > 0)
+                targetPlayer = Math.floorMod(targetPlayer - 1 , noOfPlayers);
         else
-            return Math.floorMod(currentPlayerPosition + 1 ,  noOfPlayers);
+            while(InTurnsFromNow-- > 0)
+                targetPlayer = Math.floorMod(targetPlayer + 1 ,  noOfPlayers);
+
+        return targetPlayer;
     }
     protected void reshuffleDiscardPile() {
         if (discardPile.size() <= 1) {
@@ -118,20 +126,6 @@ public abstract class Game {
         discardPile.clear();
         discardPile.add(topCard);
     }
-
-    protected final void buildUnoDeck() {
-        DeckBuilder deckBuilder = createDeckBuilder();
-        List<Card> deck =
-                deckBuilder
-                        .buildNumberedCards()
-                        .buildNormalActionCards()
-                        .buildWildActionCards()
-                        .getDeck();
-        setUnoDeck(deck);
-    }
-
-    protected abstract DeckBuilder createDeckBuilder() ;
-
     protected void resetCards() {
         for(Player player : getPlayers())
             getUnoDeck().addAll(player.getCards());
@@ -159,24 +153,26 @@ public abstract class Game {
                 // Wait for input or until the time limit is reached
             }
             // Check if the player called Uno in time
-            if (System.in.available() > 0 && "uno".equalsIgnoreCase(scanner.next())) {
+            if (System.in.available() > 0 && ("uno".equalsIgnoreCase(scanner.next())
+                                            || scanner.next().contains("uno")
+                                            || scanner.next().contains("UNO"))) {
                 System.out.println("[Announcement]    Player " + getCurrentPlayer().getName() + " called Uno!");
                 return true;
             } else {
                 return false;
             }
+
         }catch (IOException e){
             System.out.println(e.getMessage());
             return false;
         }
     }
-
     protected void readNoOfPlayers(Scanner sc, int maxPlayers){
         System.out.println("Enter the number of players (2-"+maxPlayers+") : ");
         int num = readIntegerInput(2,maxPlayers,sc);
         setNoOfPlayers(num);
     }
-    public void InitializeThePlay() {
+    protected void InitializeThePlay() {
         getDrawPile().addAll(getUnoDeck());
         getDiscardPile().clear();
         Card firstCard = drawAndRemoveCard(getDrawPile());
@@ -189,6 +185,7 @@ public abstract class Game {
         }
         getDiscardPile().add(firstCard);
         System.out.print("First card put on discard pile is : ");firstCard.print();
+        setCurrentColor(firstCard.getColor());
 
         if(firstCard instanceof ActionCard)
             processFirstCardInGame(firstCard);
@@ -204,10 +201,21 @@ public abstract class Game {
             processAction(((ActionCard) firstCard).getAction());
             setCurrentPlayerPosition(Math.floorMod(getCurrentPlayerPosition() +1 ,getNoOfPlayers()));
         }else if(firstCard instanceof WildActionCard /*only wild basically*/) {
+            getCurrentPlayer().showCards();
             processAction(((ActionCard) firstCard).getAction());
         }
     }
-
+    /*-----------------------Final Methods--------------------*/
+    protected final void buildUnoDeck() {
+        DeckBuilder deckBuilder = createDeckBuilder();
+        List<Card> deck =
+                deckBuilder
+                        .buildNumberedCards()
+                        .buildNormalActionCards()
+                        .buildWildActionCards()
+                        .getDeck();
+        setUnoDeck(deck);
+    }
     public final void printPointsTable() {
         System.out.printf("--------------------------------%n");
         System.out.printf(" Points Table         %n");
@@ -236,11 +244,14 @@ public abstract class Game {
     public final Player getCurrentPlayer(){
         return players.get(currentPlayerPosition);
     }
+    public final Player getNextPlayer(int InTurnsFromNow){
+        return players.get(getNextPlayerIndex(InTurnsFromNow));
+    }
     public final boolean isGameWinner(Player player) {
         return player.getPoints() >= pointsToWin;
     }
     public final void advanceTurn(){
-        currentPlayerPosition = getNextPlayerIndex();
+        currentPlayerPosition = getNextPlayerIndex(1);
     }
     public final Card peekTopCard(List<Card> cards){
         return cards.get(cards.size()-1);
@@ -279,8 +290,11 @@ public abstract class Game {
         }
         return input;
     }
+    /*-----------------------Abstract Methods--------------------*/
+    protected abstract void processAction(Action action);
+    protected abstract void processPenalty(Penalty penalty);
+    protected abstract DeckBuilder createDeckBuilder() ;
     protected abstract CardDealingStrategy createDealingStrategy();
-
     protected abstract int calcRoundPoints(Player winner);
     protected abstract boolean cardCanBePlayed(Card card);
     protected abstract void playOneRound();
@@ -288,85 +302,34 @@ public abstract class Game {
     public List<Player> getPlayers() {
         return players;
     }
-    public int getNoOfPlayers() {
-        return noOfPlayers;
-    }
-    public void setNoOfPlayers(int noOfPlayers) {
-        this.noOfPlayers = noOfPlayers;
-    }
-    public int getCurrentPlayerPosition() {
-        return currentPlayerPosition;
-    }
-    public void setCurrentPlayerPosition(int currentPlayerPosition) {
-        this.currentPlayerPosition = currentPlayerPosition;
-    }
-    public GameDirection getGameDirection() {
-        return gameDirection;
-    }
-    public void setGameDirection(GameDirection gameDirection) {
-        this.gameDirection = gameDirection;
-    }
-    public GameState getGameState() {
-        return gameState;
-    }
-    public void setGameState(GameState gameState) {
-        this.gameState = gameState;
-    }
 
-    public GameState getRoundState() {
-        return roundState;
-    }
-
-    public void setRoundState(GameState roundState) {
-        this.roundState = roundState;
-    }
-
-    public void setUnoDeck(List<Card> unoDeck) {
-        this.unoDeck = unoDeck;
-    }
-
-    public void setDrawPile(List<Card> drawPile) {
-        this.drawPile = drawPile;
-    }
-
-    public void setDiscardPile(List<Card> discardPile) {
-        this.discardPile = discardPile;
-    }
-
-    public List<Card> getUnoDeck() {
-        return unoDeck;
-    }
-    public List<Card> getDrawPile() {
-        return drawPile;
-    }
-    public List<Card> getDiscardPile() {
-        return discardPile;
-    }
-    public int getPointsToWin() {
-        return pointsToWin;
-    }
-    public void setPointsToWin(int pointsToWin) {
-        this.pointsToWin = pointsToWin;
-    }
-    public void setActionsApplicationStrategy(ActionsApplicationStrategy actionsApplicationStrategy) {
-        this.actionsApplicationStrategy = actionsApplicationStrategy;
-    }
-
-    public ActionsApplicationStrategy getActionsApplicationStrategy() {
-        return actionsApplicationStrategy;
-    }
-
-    public PenaltiesApplicationStrategy getPenaltiesApplicationStrategy() {
-        return penaltiesApplicationStrategy;
-    }
-
-    public void setPenaltiesApplicationStrategy(PenaltiesApplicationStrategy penaltiesApplicationStrategy) {
-        this.penaltiesApplicationStrategy = penaltiesApplicationStrategy;
-    }
-    public CardDealingStrategy getCardDealingStrategy() {
-        return cardDealingStrategy;
-    }
-    public void setCardDealingStrategy(CardDealingStrategy cardDealingStrategy) {
-        this.cardDealingStrategy = cardDealingStrategy;
-    }
+    /*-----------------------Setters + Getters--------------------*/
+    public String getName() {return name;}
+    public void setName(String name) {this.name = name;}
+    public int getNoOfPlayers() {return noOfPlayers;}
+    public void setNoOfPlayers(int noOfPlayers) {this.noOfPlayers = noOfPlayers;}
+    public int getCurrentPlayerPosition() {return currentPlayerPosition;}
+    public void setCurrentPlayerPosition(int currentPlayerPosition) {this.currentPlayerPosition = currentPlayerPosition;}
+    public GameDirection getGameDirection() {return gameDirection;}
+    public void setGameDirection(GameDirection gameDirection) {this.gameDirection = gameDirection;}
+    public GameState getGameState() {return gameState;}
+    public void setGameState(GameState gameState) {this.gameState = gameState;}
+    public GameState getRoundState() {return roundState;}
+    public void setRoundState(GameState roundState) {this.roundState = roundState;}
+    public void setUnoDeck(List<Card> unoDeck) {this.unoDeck = unoDeck;}
+    public void setDrawPile(List<Card> drawPile) {this.drawPile = drawPile;}
+    public void setDiscardPile(List<Card> discardPile) {this.discardPile = discardPile;}
+    public List<Card> getUnoDeck() {return unoDeck;}
+    public List<Card> getDrawPile() {return drawPile;}
+    public List<Card> getDiscardPile() {return discardPile;}
+    public int getPointsToWin() {return pointsToWin;}
+    public void setPointsToWin(int pointsToWin) {this.pointsToWin = pointsToWin;}
+    public void setActionsApplicationStrategy(ActionsApplicationStrategy actionsApplicationStrategy) {this.actionsApplicationStrategy = actionsApplicationStrategy;}
+    public ActionsApplicationStrategy getActionsApplicationStrategy() {return actionsApplicationStrategy;}
+    public PenaltiesApplicationStrategy getPenaltiesApplicationStrategy() {return penaltiesApplicationStrategy;}
+    public void setPenaltiesApplicationStrategy(PenaltiesApplicationStrategy penaltiesApplicationStrategy) {this.penaltiesApplicationStrategy = penaltiesApplicationStrategy;}
+    public CardDealingStrategy getCardDealingStrategy() {return cardDealingStrategy;}
+    public void setCardDealingStrategy(CardDealingStrategy cardDealingStrategy) {this.cardDealingStrategy = cardDealingStrategy;}
+    public Color getCurrentColor() {return currentColor;}
+    public void setCurrentColor(Color currentColor) {this.currentColor = currentColor;}
 }

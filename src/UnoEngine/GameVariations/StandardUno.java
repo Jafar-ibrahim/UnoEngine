@@ -2,8 +2,6 @@ package UnoEngine.GameVariations;
 import UnoEngine.Cards.*;
 import UnoEngine.Enums.*;
 import UnoEngine.Player;
-import UnoEngine.Strategies.ActionStrategies.ChangeColorActionStrategy;
-import UnoEngine.Strategies.ActionStrategies.ReverseActionStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.CardDealingStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.StandardCardDealingStrategy;
 import UnoEngine.Strategies.PenaltyStrategies.*;
@@ -12,13 +10,13 @@ import java.util.Scanner;
 public class StandardUno extends Game{
     public StandardUno(int pointsToWin , GameDirection gameDirection) {
         super(pointsToWin,gameDirection);
+        setName("Standard Uno");
     }
 
     @Override
     protected DeckBuilder createDeckBuilder() {
         return new StandardDeckBuilder();
     }
-
     @Override
     protected CardDealingStrategy createDealingStrategy() {
         return new StandardCardDealingStrategy();
@@ -39,14 +37,17 @@ public class StandardUno extends Game{
         Card topDiscard = peekTopCard(getDiscardPile());
         if(card instanceof WildActionCard){
             if (((WildActionCard) card).getAction() == WildAction.WILD_DRAW_4){
-                for (Card otherCard : getCurrentPlayer().getCards())
-                    // wild+4 can be only played if no other card can be played
-                    if (otherCard != card && cardCanBePlayed(otherCard))
+                for (Card otherCard : getCurrentPlayer().getCards()) {
+                    if (otherCard instanceof WildActionCard)
+                        continue;
+                    // wild+4 can be only played if no colored card can be played
+                    if (cardCanBePlayed(otherCard))
                         return false;
+                }
             }
             return true;
         }else{
-            if(card.getColor() == topDiscard.getColor()) return true;
+            if(card.getColor() == getCurrentColor()) return true;
             else if (card instanceof NormalActionCard && topDiscard instanceof NormalActionCard) {
                 return ((NormalActionCard) card).getAction() == ((NormalActionCard) topDiscard).getAction();
             }else if(card instanceof NumberedCard){
@@ -60,7 +61,9 @@ public class StandardUno extends Game{
         InitializeThePlay();
         while (true){
             Player currentPlayer = getCurrentPlayer();
+            System.out.println(currentPlayer.getPenalty().toString());
             checkForPenalty();
+            // if current player changed/skipped due to a penalty
             if (currentPlayer != getCurrentPlayer()) continue;
 
             printUserInterface();
@@ -69,6 +72,7 @@ public class StandardUno extends Game{
                 if (!cardCanBePlayed(peekTopCard(getCurrentPlayer().getCards())))
                     {advanceTurn();continue;}
             }
+
             int chosenCardIndex = readCardIndex(new Scanner(System.in)) - 1;
             Card chosenCard = currentPlayer.getCards().get(chosenCardIndex);
             while(!cardCanBePlayed(chosenCard)){
@@ -77,6 +81,7 @@ public class StandardUno extends Game{
             }
             currentPlayer.playCard(chosenCard);
             getDiscardPile().add(chosenCard);
+            setCurrentColor(chosenCard.getColor());
             checkForUno();
 
             if (currentPlayer.getNumberOfCards() == 0){
@@ -91,7 +96,7 @@ public class StandardUno extends Game{
     }
     @Override
     protected void processAction(Action action) {
-        if(action == NormalAction.REVERSE){
+        /*if(action == NormalAction.REVERSE){
             setActionsApplicationStrategy(new ReverseActionStrategy());
             getActionsApplicationStrategy().applyAction(this);
 
@@ -102,33 +107,38 @@ public class StandardUno extends Game{
         }
 
         setActionsApplicationStrategy(new PenaltyAssignmentStrategy());
-        getActionsApplicationStrategy().applyAction(this);
+        getActionsApplicationStrategy().applyAction(this);*/
+        action.applyAction(this,getNextPlayer(1));
     }
     @Override
     protected void processPenalty(Penalty penalty) {
-        getCurrentPlayer().setPenalty(Penalty.NONE);
+        getCurrentPlayer().setPenalty(StandardPenalty.NONE);
 
-        if(penalty == Penalty.DRAW_2){
-            setPenaltiesApplicationStrategy(new Draw2PenaltyStrategy());
-        }else if(penalty == Penalty.DRAW_4){
-            setPenaltiesApplicationStrategy(new Draw4PenaltyStrategy());
-        } else if (penalty == Penalty.FORGOT_UNO)
-            setPenaltiesApplicationStrategy(new ForgotUnoPenaltyStrategy());
-        if (penalty == Penalty.SKIP || penalty == Penalty.DRAW_2 || penalty == Penalty.DRAW_4) {
+        /*if (penalty == StandardPenalty.SKIP) {
             setPenaltiesApplicationStrategy(new SkipPenaltyStrategy());
-        }
+        } else if(penalty == StandardPenalty.DRAW_2 || penalty == StandardPenalty.DRAW_4){
+            if(penalty == StandardPenalty.DRAW_2)
+                setPenaltiesApplicationStrategy(new Draw2PenaltyStrategy());
+            else
+                setPenaltiesApplicationStrategy(new Draw4PenaltyStrategy());
 
-        getPenaltiesApplicationStrategy().applyPenalty(this);
+            getPenaltiesApplicationStrategy().applyPenalty(this);
+            setPenaltiesApplicationStrategy(new SkipPenaltyStrategy());
+        }else if (penalty == StandardPenalty.FORGOT_UNO)
+            setPenaltiesApplicationStrategy(new ForgotUnoPenaltyStrategy());
+
+        getPenaltiesApplicationStrategy().applyPenalty(this);*/
+        penalty.applyPenalty(this,getCurrentPlayer());
     }
 
     public void printUserInterface(){
         Card topDiscard = peekTopCard(getDiscardPile());
         System.out.println("------------------ "+getCurrentPlayer().getName()+" turn ------------------");
-        System.out.print("Top card on discard pile is : ");topDiscard.print();
+        System.out.print("Current color : "+getCurrentColor()+"\nTop card on discard pile is : ");topDiscard.print();
         getCurrentPlayer().showCards();
     }
     public void checkForPenalty(){
-        if(getCurrentPlayer().getPenalty() != Penalty.NONE){
+        if(getCurrentPlayer().getPenalty() != StandardPenalty.NONE){
             processPenalty(getCurrentPlayer().getPenalty());
         }
     }

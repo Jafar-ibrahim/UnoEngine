@@ -20,9 +20,6 @@ public class WildActionCard extends ActionCard{
     }
     @Override
     public void print() {
-        if (getColor() == Color.WILD_COLOR)
-            System.out.println("Wild Card     | "+ getAction().toString());
-        else
-            System.out.println("Wild Card     | "+ getColor());
+        System.out.println("Wild Card     | "+ getAction().toString());
     }
 }

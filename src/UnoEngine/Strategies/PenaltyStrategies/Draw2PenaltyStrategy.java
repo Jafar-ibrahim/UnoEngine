@@ -1,6 +1,5 @@
 package UnoEngine.Strategies.PenaltyStrategies;
 
-import UnoEngine.Enums.Penalty;
 import UnoEngine.GameVariations.Game;
 import UnoEngine.Player;
 

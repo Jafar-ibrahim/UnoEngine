@@ -3,21 +3,21 @@ package UnoEngine.GameVariations;
 import UnoEngine.Cards.*;
 import UnoEngine.Enums.*;
 import UnoEngine.Player;
-import UnoEngine.Strategies.ActionStrategies.ChangeColorActionStrategy;
 import UnoEngine.Strategies.ActionStrategies.ForcedSwapStrategy;
+import UnoEngine.Strategies.ActionStrategies.PenaltyAssignmentStrategy;
 import UnoEngine.Strategies.ActionStrategies.ReverseActionStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.CardDealingStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.StandardCardDealingStrategy;
 import UnoEngine.Strategies.PenaltyStrategies.*;
 
-import java.util.Comparator;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
-public class HouseRulesUno extends Game{
-    public HouseRulesUno(int pointsToWin , GameDirection gameDirection) {
+public class AllWildUno extends Game{
+    public AllWildUno(int pointsToWin , GameDirection gameDirection) {
         super(pointsToWin, gameDirection);
+        setName("All Wild! Uno");
+
     }
 
     @Override
@@ -49,6 +49,7 @@ public class HouseRulesUno extends Game{
 
     @Override
     public void playOneRound() {
+        System.out.println();
         InitializeThePlay();
         while (true){
             Player currentPlayer = getCurrentPlayer();
@@ -67,40 +68,30 @@ public class HouseRulesUno extends Game{
                 setRoundState(GameState.A_PLAYER_WON);
                 return;
             }
-            if (chosenCard.getAction() != AllWildAction.WILD)
+            if (chosenCard.getAction() != WildAction.WILD)
                 processAction(chosenCard.getAction());
 
             advanceTurn();
         }
     }
     @Override
+    protected void InitializeThePlay(){
+        getDrawPile().addAll(getUnoDeck());
+        getDiscardPile().clear();
+        Card firstCard = drawAndRemoveCard(getDrawPile());
+
+        getDiscardPile().add(firstCard);
+        System.out.print("First card put on discard pile is : ");firstCard.print();
+        setCurrentColor(firstCard.getColor());
+    }
+    @Override
     protected void processAction(Action action) {
-        if(action == AllWildAction.WILD_REVERSE){
-            setActionsApplicationStrategy(new ReverseActionStrategy());
-            getActionsApplicationStrategy().applyAction(this);
-
-        }else if(action == AllWildAction.WILd_FORCED_SWAP){
-            setActionsApplicationStrategy(new ForcedSwapStrategy());
-        }
-
-        setActionsApplicationStrategy(new PenaltyAssignmentStrategy());
-        getActionsApplicationStrategy().applyAction(this);
+        action.applyAction(this,getNextPlayer(1));
     }
     @Override
     protected void processPenalty(Penalty penalty) {
-        getCurrentPlayer().setPenalty(Penalty.NONE);
-
-        if(penalty == Penalty.DRAW_2){
-            setPenaltiesApplicationStrategy(new Draw2PenaltyStrategy());
-        }else if(penalty == Penalty.DRAW_4){
-            setPenaltiesApplicationStrategy(new Draw4PenaltyStrategy());
-        } else if (penalty == Penalty.FORGOT_UNO)
-            setPenaltiesApplicationStrategy(new ForgotUnoPenaltyStrategy());
-        if (penalty == Penalty.SKIP || penalty == Penalty.DRAW_2 || penalty == Penalty.DRAW_4) {
-            setPenaltiesApplicationStrategy(new SkipPenaltyStrategy());
-        }
-
-        getPenaltiesApplicationStrategy().applyPenalty(this);
+        getCurrentPlayer().setPenalty(StandardPenalty.NONE);
+        penalty.applyPenalty(this,getCurrentPlayer());
     }
     public void printUserInterface(){
         Card topDiscard = peekTopCard(getDiscardPile());
@@ -118,7 +109,7 @@ public class HouseRulesUno extends Game{
     }
 
     public void checkForPenalty(){
-        if(getCurrentPlayer().getPenalty() != Penalty.NONE){
+        if(getCurrentPlayer().getPenalty() != StandardPenalty.NONE){
             processPenalty(getCurrentPlayer().getPenalty());
         }
     }

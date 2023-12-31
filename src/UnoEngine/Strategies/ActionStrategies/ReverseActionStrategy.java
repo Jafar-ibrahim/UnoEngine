@@ -1,8 +1,6 @@
 package UnoEngine.Strategies.ActionStrategies;
 
 import UnoEngine.Enums.GameDirection;
-import UnoEngine.Enums.NormalAction;
-import UnoEngine.Enums.Penalty;
 import UnoEngine.GameVariations.Game;
 
 public class ReverseActionStrategy implements ActionsApplicationStrategy{

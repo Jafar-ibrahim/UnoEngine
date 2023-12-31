@@ -2,6 +2,7 @@ package UnoEngine;
 
 import UnoEngine.Cards.Card;
 import UnoEngine.Enums.Penalty;
+import UnoEngine.Enums.StandardPenalty;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,7 @@ public class Player {
     public Player(String name) {
         this.name = name;
         points = 0;
-        penalty = Penalty.NONE;
+        penalty = StandardPenalty.NONE;
         cards = new ArrayList<>();
     }
     public String getName() {
