@@ -2,6 +2,7 @@ package UnoEngine.GameVariations;
 import UnoEngine.Cards.*;
 import UnoEngine.Enums.*;
 import UnoEngine.Player;
+import UnoEngine.Strategies.ActionStrategies.*;
 import UnoEngine.Strategies.CardDealingStrategies.CardDealingStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.StandardCardDealingStrategy;
 import UnoEngine.Strategies.PenaltyStrategies.*;
@@ -11,6 +12,23 @@ public class StandardUno extends Game{
     public StandardUno(int pointsToWin , GameDirection gameDirection) {
         super(pointsToWin,gameDirection);
         setName("Standard Uno");
+    }
+
+    @Override
+    protected void addRequiredStrategies() {
+        // For performing card actions that don't apply penalties to players , or
+        // applying penalties for the ones who do ( action strategies )
+        getStrategyRegistry().addActionStrategy(NormalAction.REVERSE,new ReverseActionStrategy());
+        getStrategyRegistry().addActionStrategy(WildAction.WILD,new ChangeColorActionStrategy());
+        getStrategyRegistry().addActionStrategy(NormalAction.SKIP, new PenaltyAssignmentStrategy(NormalAction.SKIP));
+        getStrategyRegistry().addActionStrategy(NormalAction.DRAW_2, new PenaltyAssignmentStrategy(NormalAction.DRAW_2));
+        getStrategyRegistry().addActionStrategy(WildAction.WILD_DRAW_4, new WildDraw4ActionStrategy());
+
+        // For applying the penalties inflicted by action cards ( penalty strategies )
+        getStrategyRegistry().addPenaltyStrategy(StandardPenalty.SKIP,new SkipPenaltyStrategy());
+        getStrategyRegistry().addPenaltyStrategy(StandardPenalty.DRAW_2,new Draw2PenaltyStrategy());
+        getStrategyRegistry().addPenaltyStrategy(StandardPenalty.DRAW_4,new Draw4PenaltyStrategy());
+        getStrategyRegistry().addPenaltyStrategy(StandardPenalty.FORGOT_UNO,new ForgotUnoPenaltyStrategy());
     }
 
     @Override
@@ -62,7 +80,7 @@ public class StandardUno extends Game{
         while (true){
             Player currentPlayer = getCurrentPlayer();
             System.out.println(currentPlayer.getPenalty().toString());
-            checkForPenalty();
+            checkForPenalty(getCurrentPlayer());
             // if current player changed/skipped due to a penalty
             if (currentPlayer != getCurrentPlayer()) continue;
 
@@ -84,12 +102,16 @@ public class StandardUno extends Game{
             setCurrentColor(chosenCard.getColor());
             checkForUno();
 
-            if (currentPlayer.getNumberOfCards() == 0){
-                setRoundState(GameState.A_PLAYER_WON);
-                return;
-            }
             if(chosenCard instanceof ActionCard){
                 processAction(((ActionCard)chosenCard).getAction());
+            }
+            if (currentPlayer.getNumberOfCards() == 0){
+                for(Player player : getPlayers()){
+                    checkForPenalty(player);
+                }
+                setRoundState(GameState.A_PLAYER_WON);
+                setRoundWinner(currentPlayer);
+                return;
             }
             advanceTurn();
         }
@@ -108,10 +130,14 @@ public class StandardUno extends Game{
 
         setActionsApplicationStrategy(new PenaltyAssignmentStrategy());
         getActionsApplicationStrategy().applyAction(this);*/
-        action.applyAction(this,getNextPlayer(1));
+        //action.applyAction(this,getNextPlayer(1));
+
+        ActionStrategy actionStrategy =   getStrategyRegistry().getActionStrategy(action);
+        if (actionStrategy != null)
+            actionStrategy.applyAction(this);
     }
     @Override
-    protected void processPenalty(Penalty penalty) {
+    protected void processPenalty(Penalty penalty , Player targetPlayer) {
         getCurrentPlayer().setPenalty(StandardPenalty.NONE);
 
         /*if (penalty == StandardPenalty.SKIP) {
@@ -128,8 +154,9 @@ public class StandardUno extends Game{
             setPenaltiesApplicationStrategy(new ForgotUnoPenaltyStrategy());
 
         getPenaltiesApplicationStrategy().applyPenalty(this);*/
-        penalty.applyPenalty(this,getCurrentPlayer());
-    }
+        //penalty.applyPenalty(this,getCurrentPlayer());
+        PenaltyStrategy penaltyStrategy = getStrategyRegistry().getPenaltyStrategy(penalty);
+        penaltyStrategy.applyPenalty(this,targetPlayer);    }
 
     public void printUserInterface(){
         Card topDiscard = peekTopCard(getDiscardPile());
@@ -137,9 +164,9 @@ public class StandardUno extends Game{
         System.out.print("Current color : "+getCurrentColor()+"\nTop card on discard pile is : ");topDiscard.print();
         getCurrentPlayer().showCards();
     }
-    public void checkForPenalty(){
-        if(getCurrentPlayer().getPenalty() != StandardPenalty.NONE){
-            processPenalty(getCurrentPlayer().getPenalty());
+    public void checkForPenalty(Player targetPlayer){
+        if(targetPlayer.getPenalty() != StandardPenalty.NONE){
+            processPenalty(targetPlayer.getPenalty(),targetPlayer);
         }
     }
 

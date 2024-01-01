@@ -8,7 +8,29 @@ import java.util.List;
 import java.util.Scanner;
 
 public enum AllWildAction implements Action{
-    WILD_DRAW_4 {
+
+
+    WILD(StandardPenalty.NONE),
+    SKIP_2(StandardPenalty.SKIP),
+    TARGETED_DRAW_2(StandardPenalty.NONE),
+    FORCED_SWAP(StandardPenalty.NONE);
+
+    private Penalty associatedPenalty;
+
+    AllWildAction(Penalty associatedPenalty) {
+        this.associatedPenalty = associatedPenalty;
+    }
+
+    @Override
+    public Penalty getAssociatedPenalty() {
+        return associatedPenalty;
+    }
+
+    @Override
+    public void setAssociatedPenalty(Penalty associatedPenalty) {
+        this.associatedPenalty = associatedPenalty;
+    }
+    /*WILD_DRAW_4 {
         @Override
         void applyActionHelper(Game game){
             game.getNextPlayer(1).setPenalty(StandardPenalty.DRAW_4);
@@ -63,10 +85,12 @@ public enum AllWildAction implements Action{
         }
     };
 
-    @Override
+    //@Override
     public void applyAction(Game game, Player targetPlayer) {
         applyActionHelper(game);
     }
 
-    abstract void applyActionHelper(Game game);
+    abstract void applyActionHelper(Game game);*/
+
+
 }

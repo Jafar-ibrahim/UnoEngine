@@ -1,11 +1,18 @@
 package UnoEngine.Strategies.PenaltyStrategies;
 
+import UnoEngine.Enums.Penalty;
+import UnoEngine.Enums.StandardPenalty;
 import UnoEngine.GameVariations.Game;
+import UnoEngine.Player;
 
-public class ForgotUnoPenaltyStrategy implements PenaltiesApplicationStrategy{
+public class ForgotUnoPenaltyStrategy implements PenaltyStrategy {
     @Override
-    public void applyPenalty(Game game) {
-        System.out.println("[Penalty]    Player " + game.getCurrentPlayer().getName() + " didn't call Uno in time.");
-        game.getCurrentPlayer().drawCards(game.giveCards(2,game.getDrawPile()));
+    public void applyPenalty(Game game, Player targetPlayer) {
+
+        System.out.println("[Announcement]    Player " + targetPlayer.getName() + " didn't call Uno , Penalty!");
+        // Didn't call DRAW_2 because unlike FORGOT_UNO, it skips current player turn
+        targetPlayer.drawCards(game.giveCards(2,game.getDrawPile()));
+        System.out.println("[Action]    "+targetPlayer.getName() +" drew 2 cards");
+
     }
 }

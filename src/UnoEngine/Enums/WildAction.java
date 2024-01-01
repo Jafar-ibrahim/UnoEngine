@@ -6,7 +6,24 @@ import UnoEngine.Player;
 import java.util.Scanner;
 
 public enum WildAction implements Action{
-    WILD {
+
+    WILD(StandardPenalty.NONE) ,
+    WILD_DRAW_4(StandardPenalty.DRAW_4);
+    private Penalty associatedPenalty;
+
+    WildAction(Penalty associatedPenalty) {
+        this.associatedPenalty = associatedPenalty;
+    }
+
+    public Penalty getAssociatedPenalty() {
+        return associatedPenalty;
+    }
+
+    public void setAssociatedPenalty(Penalty associatedPenalty) {
+        this.associatedPenalty = associatedPenalty;
+    }
+
+    /*WILD {
         @Override
         public void applyActionHelper(Game game , Player targetPlayer) {
             System.out.println("Please choose a color to continue(enter the color number):\n" +
@@ -28,5 +45,7 @@ public enum WildAction implements Action{
     public void applyAction(Game game , Player targetPlayer) {
         applyActionHelper(game,targetPlayer);
     }
-    public abstract void applyActionHelper(Game game , Player targetPlayer);
+    public abstract void applyActionHelper(Game game , Player targetPlayer);*/
+
+
 }

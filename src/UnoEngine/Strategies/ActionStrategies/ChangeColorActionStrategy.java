@@ -5,7 +5,7 @@ import UnoEngine.GameVariations.Game;
 
 import java.util.Scanner;
 
-public class ChangeColorActionStrategy implements ActionsApplicationStrategy {
+public class ChangeColorActionStrategy implements ActionStrategy {
     @Override
     public void applyAction(Game game) {
         System.out.println("Please choose a color to continue(enter the color number):\n" +

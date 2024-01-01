@@ -3,9 +3,7 @@ package UnoEngine.GameVariations;
 import UnoEngine.Cards.*;
 import UnoEngine.Enums.*;
 import UnoEngine.Player;
-import UnoEngine.Strategies.ActionStrategies.ForcedSwapStrategy;
-import UnoEngine.Strategies.ActionStrategies.PenaltyAssignmentStrategy;
-import UnoEngine.Strategies.ActionStrategies.ReverseActionStrategy;
+import UnoEngine.Strategies.ActionStrategies.*;
 import UnoEngine.Strategies.CardDealingStrategies.CardDealingStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.StandardCardDealingStrategy;
 import UnoEngine.Strategies.PenaltyStrategies.*;
@@ -18,6 +16,25 @@ public class AllWildUno extends Game{
         super(pointsToWin, gameDirection);
         setName("All Wild! Uno");
 
+    }
+
+    @Override
+    protected void addRequiredStrategies() {
+        // For performing card actions that don't apply penalties to players , or
+        // applying penalties for the ones who do ( action strategies )
+        getStrategyRegistry().addActionStrategy(NormalAction.REVERSE,new ReverseActionStrategy());
+        getStrategyRegistry().addActionStrategy(NormalAction.SKIP, new PenaltyAssignmentStrategy(NormalAction.SKIP));
+        getStrategyRegistry().addActionStrategy(NormalAction.DRAW_2, new PenaltyAssignmentStrategy(NormalAction.DRAW_2));
+        getStrategyRegistry().addActionStrategy(WildAction.WILD_DRAW_4, new CustomWildDraw4Strategy());
+        getStrategyRegistry().addActionStrategy(AllWildAction.SKIP_2, new Skip2Strategy());
+        getStrategyRegistry().addActionStrategy(AllWildAction.TARGETED_DRAW_2, new TargetedDraw2Strategy());
+        getStrategyRegistry().addActionStrategy(AllWildAction.FORCED_SWAP, new ForcedSwapStrategy());
+
+        // For applying the penalties inflicted by action cards ( penalty strategies )
+        getStrategyRegistry().addPenaltyStrategy(StandardPenalty.SKIP,new SkipPenaltyStrategy());
+        getStrategyRegistry().addPenaltyStrategy(StandardPenalty.DRAW_2,new Draw2PenaltyStrategy());
+        getStrategyRegistry().addPenaltyStrategy(StandardPenalty.DRAW_4,new Draw4PenaltyStrategy());
+        getStrategyRegistry().addPenaltyStrategy(StandardPenalty.FORGOT_UNO,new ForgotUnoPenaltyStrategy());
     }
 
     @Override
@@ -53,7 +70,7 @@ public class AllWildUno extends Game{
         InitializeThePlay();
         while (true){
             Player currentPlayer = getCurrentPlayer();
-            checkForPenalty();
+            checkForPenalty(getCurrentPlayer());
             if (currentPlayer != getCurrentPlayer()) continue;
 
             printUserInterface();
@@ -64,12 +81,17 @@ public class AllWildUno extends Game{
             getDiscardPile().add(chosenCard);
             checkForUno();
 
-            if (currentPlayer.getNumberOfCards() == 0){
-                setRoundState(GameState.A_PLAYER_WON);
-                return;
-            }
             if (chosenCard.getAction() != WildAction.WILD)
                 processAction(chosenCard.getAction());
+
+            if (currentPlayer.getNumberOfCards() == 0){
+                for(Player player : getPlayers()){
+                    checkForPenalty(player);
+                }
+                setRoundState(GameState.A_PLAYER_WON);
+                setRoundWinner(currentPlayer);
+                return;
+            }
 
             advanceTurn();
         }
@@ -86,12 +108,17 @@ public class AllWildUno extends Game{
     }
     @Override
     protected void processAction(Action action) {
-        action.applyAction(this,getNextPlayer(1));
+        //action.applyAction(this,getNextPlayer(1));
+        ActionStrategy actionStrategy =   getStrategyRegistry().getActionStrategy(action);
+        if (actionStrategy != null)
+            actionStrategy.applyAction(this);
     }
     @Override
-    protected void processPenalty(Penalty penalty) {
+    protected void processPenalty(Penalty penalty, Player targetPlayer) {
         getCurrentPlayer().setPenalty(StandardPenalty.NONE);
-        penalty.applyPenalty(this,getCurrentPlayer());
+        //penalty.applyPenalty(this,getCurrentPlayer());
+        PenaltyStrategy penaltyStrategy = getStrategyRegistry().getPenaltyStrategy(penalty);
+        penaltyStrategy.applyPenalty(this,targetPlayer);
     }
     public void printUserInterface(){
         Card topDiscard = peekTopCard(getDiscardPile());
@@ -108,9 +135,9 @@ public class AllWildUno extends Game{
         System.out.println(getPlayers().get(getCurrentPlayerPosition()).getName() +" starts first ");
     }
 
-    public void checkForPenalty(){
-        if(getCurrentPlayer().getPenalty() != StandardPenalty.NONE){
-            processPenalty(getCurrentPlayer().getPenalty());
+    public void checkForPenalty(Player targetPlayer){
+        if(targetPlayer.getPenalty() != StandardPenalty.NONE){
+            processPenalty(targetPlayer.getPenalty(), targetPlayer);
         }
     }
 }
