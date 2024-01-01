@@ -17,14 +17,14 @@ public class StandardDeckBuilder implements DeckBuilder{
 
     @Override
     public DeckBuilder buildNumberedCards() {
-        for(int i = 0; i < Color.values().length-1; i++){
+        /*for(int i = 0; i < Color.values().length-1; i++){
             Color currentColor = Color.values()[i];
             deck.add(new NumberedCard(currentColor,0));
             for(int j = 1 ; j < 10 ; j++){
                 deck.add(new NumberedCard(currentColor,j));
                 deck.add(new NumberedCard(currentColor,j));
             }
-        }
+        }*/
         return this;
     }
 

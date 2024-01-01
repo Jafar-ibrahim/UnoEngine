@@ -4,9 +4,8 @@ import UnoEngine.GameVariations.Game;
 import UnoEngine.Player;
 
 public interface Action {
-    // Specifying the target player isn't always needed ,but It's more extensible/future-proof .
-    //void applyAction(Game game , Player targetPlayer);
     Penalty getAssociatedPenalty() ;
-
+    // didn't use it in my code , but might be helpful for others to
+    // change the Action-Penalty mapping without creating a new enum class
     void setAssociatedPenalty(Penalty associatedPenalty);
 }

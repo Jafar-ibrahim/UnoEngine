@@ -13,7 +13,14 @@ public class StandardUno extends Game{
         super(pointsToWin,gameDirection);
         setName("Standard Uno");
     }
-
+    @Override
+    protected DeckBuilder createDeckBuilder() {
+        return new StandardDeckBuilder();
+    }
+    @Override
+    protected CardDealingStrategy createDealingStrategy() {
+        return new StandardCardDealingStrategy();
+    }
     @Override
     protected void addRequiredStrategies() {
         // For performing card actions that don't apply penalties to players , or
@@ -29,15 +36,6 @@ public class StandardUno extends Game{
         getStrategyRegistry().addPenaltyStrategy(StandardPenalty.DRAW_2,new Draw2PenaltyStrategy());
         getStrategyRegistry().addPenaltyStrategy(StandardPenalty.DRAW_4,new Draw4PenaltyStrategy());
         getStrategyRegistry().addPenaltyStrategy(StandardPenalty.FORGOT_UNO,new ForgotUnoPenaltyStrategy());
-    }
-
-    @Override
-    protected DeckBuilder createDeckBuilder() {
-        return new StandardDeckBuilder();
-    }
-    @Override
-    protected CardDealingStrategy createDealingStrategy() {
-        return new StandardCardDealingStrategy();
     }
     @Override
     public int calcRoundPoints(Player winner) {
@@ -118,43 +116,13 @@ public class StandardUno extends Game{
     }
     @Override
     protected void processAction(Action action) {
-        /*if(action == NormalAction.REVERSE){
-            setActionsApplicationStrategy(new ReverseActionStrategy());
-            getActionsApplicationStrategy().applyAction(this);
-
-        }else if(action == WildAction.WILD || action == WildAction.WILD_DRAW_4){
-            setActionsApplicationStrategy(new ChangeColorActionStrategy());
-            getActionsApplicationStrategy().applyAction(this);
-
-        }
-
-        setActionsApplicationStrategy(new PenaltyAssignmentStrategy());
-        getActionsApplicationStrategy().applyAction(this);*/
-        //action.applyAction(this,getNextPlayer(1));
-
-        ActionStrategy actionStrategy =   getStrategyRegistry().getActionStrategy(action);
+        ActionStrategy actionStrategy =  getStrategyRegistry().getActionStrategy(action);
         if (actionStrategy != null)
             actionStrategy.applyAction(this);
     }
     @Override
     protected void processPenalty(Penalty penalty , Player targetPlayer) {
         getCurrentPlayer().setPenalty(StandardPenalty.NONE);
-
-        /*if (penalty == StandardPenalty.SKIP) {
-            setPenaltiesApplicationStrategy(new SkipPenaltyStrategy());
-        } else if(penalty == StandardPenalty.DRAW_2 || penalty == StandardPenalty.DRAW_4){
-            if(penalty == StandardPenalty.DRAW_2)
-                setPenaltiesApplicationStrategy(new Draw2PenaltyStrategy());
-            else
-                setPenaltiesApplicationStrategy(new Draw4PenaltyStrategy());
-
-            getPenaltiesApplicationStrategy().applyPenalty(this);
-            setPenaltiesApplicationStrategy(new SkipPenaltyStrategy());
-        }else if (penalty == StandardPenalty.FORGOT_UNO)
-            setPenaltiesApplicationStrategy(new ForgotUnoPenaltyStrategy());
-
-        getPenaltiesApplicationStrategy().applyPenalty(this);*/
-        //penalty.applyPenalty(this,getCurrentPlayer());
         PenaltyStrategy penaltyStrategy = getStrategyRegistry().getPenaltyStrategy(penalty);
         penaltyStrategy.applyPenalty(this,targetPlayer);    }
 

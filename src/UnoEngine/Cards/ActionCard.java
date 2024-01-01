@@ -4,7 +4,6 @@ import UnoEngine.Enums.Action;
 import UnoEngine.Enums.Color;
 
 public abstract class ActionCard extends Card{
-    Action action;
     public ActionCard(Color color, int value) {
         super(color,value);
     }

@@ -199,14 +199,14 @@ public abstract class Game {
 
     }
     protected void processFirstCardInGame(Card firstCard){
-        // if the first card(drawn from draw pile) is action card , apply it to the first player
+
         if(firstCard instanceof NormalActionCard){
-            // in case of potential penalty :
-            // to assign the penalty to the current player, I have to backtrack by one player
-            // cause the method flags the next player with a penalty (not the current one)
-            setCurrentPlayerPosition(Math.floorMod(getCurrentPlayerPosition() -1 , getNoOfPlayers()));
-            processAction(((ActionCard) firstCard).getAction());
-            setCurrentPlayerPosition(Math.floorMod(getCurrentPlayerPosition() +1 ,getNoOfPlayers()));
+            Action action = ((ActionCard) firstCard).getAction();
+            // whether it's a penalty or just action , it has to be applied to the first player
+            if (action.getAssociatedPenalty() == null)
+                processAction(action);
+            else
+                processPenalty(action.getAssociatedPenalty(),getCurrentPlayer());
         }else if(firstCard instanceof WildActionCard /*only wild basically*/) {
             getCurrentPlayer().showCards();
             processAction(((ActionCard) firstCard).getAction());
@@ -339,21 +339,9 @@ public abstract class Game {
     public void setCardDealingStrategy(CardDealingStrategy cardDealingStrategy) {this.cardDealingStrategy = cardDealingStrategy;}
     public Color getCurrentColor() {return currentColor;}
     public void setCurrentColor(Color currentColor) {this.currentColor = currentColor;}
-    public StrategyRegistry getStrategyRegistry() {
-        return strategyRegistry;
-    }
-    public Player getGameWinner() {
-        return gameWinner;
-    }
-    public void setGameWinner(Player gameWinner) {
-        this.gameWinner = gameWinner;
-    }
-
-    public Player getRoundWinner() {
-        return roundWinner;
-    }
-
-    public void setRoundWinner(Player roundWinner) {
-        this.roundWinner = roundWinner;
-    }
+    public StrategyRegistry getStrategyRegistry() {return strategyRegistry;}
+    public Player getGameWinner() {return gameWinner;}
+    public void setGameWinner(Player gameWinner) {this.gameWinner = gameWinner;}
+    public Player getRoundWinner() {return roundWinner;}
+    public void setRoundWinner(Player roundWinner) {this.roundWinner = roundWinner;}
 }

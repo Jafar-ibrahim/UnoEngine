@@ -61,6 +61,7 @@ public class AllWildUno extends Game{
 
     @Override
     protected boolean cardCanBePlayed(Card card) {
+        // all cards are playable at any time in this uno variation(All Wild! )
         return true;
     }
 
@@ -108,7 +109,6 @@ public class AllWildUno extends Game{
     }
     @Override
     protected void processAction(Action action) {
-        //action.applyAction(this,getNextPlayer(1));
         ActionStrategy actionStrategy =   getStrategyRegistry().getActionStrategy(action);
         if (actionStrategy != null)
             actionStrategy.applyAction(this);
@@ -116,7 +116,6 @@ public class AllWildUno extends Game{
     @Override
     protected void processPenalty(Penalty penalty, Player targetPlayer) {
         getCurrentPlayer().setPenalty(StandardPenalty.NONE);
-        //penalty.applyPenalty(this,getCurrentPlayer());
         PenaltyStrategy penaltyStrategy = getStrategyRegistry().getPenaltyStrategy(penalty);
         penaltyStrategy.applyPenalty(this,targetPlayer);
     }
@@ -127,14 +126,12 @@ public class AllWildUno extends Game{
         getCurrentPlayer().showCards();
     }
 
-
     @Override
     public void decideWhoStarts(){
         Random rand = new Random();
         setCurrentPlayerPosition(rand.nextInt(getNoOfPlayers()));
         System.out.println(getPlayers().get(getCurrentPlayerPosition()).getName() +" starts first ");
     }
-
     public void checkForPenalty(Player targetPlayer){
         if(targetPlayer.getPenalty() != StandardPenalty.NONE){
             processPenalty(targetPlayer.getPenalty(), targetPlayer);
