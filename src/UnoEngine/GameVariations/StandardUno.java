@@ -13,6 +13,46 @@ public class StandardUno extends Game{
         super(pointsToWin,gameDirection);
         setName("Standard Uno");
     }
+
+    @Override
+    public void playOneRound() {
+        InitializeThePlay();
+        while (getRoundState() == GameState.ONGOING){
+            Player currentPlayer = getCurrentPlayer();
+            checkForPenalty(getCurrentPlayer());
+            // if current player changed/skipped due to a penalty
+            if (currentPlayer != getCurrentPlayer()) continue;
+            printUserInterface();
+            if(!playerHasAnyMatchingCards(currentPlayer)){
+                mandatoryDraw(currentPlayer,1);
+                if (!cardCanBePlayed(peekTopCard(getCurrentPlayer().getCards())))
+                {advanceTurn();continue;}
+            }
+
+            int chosenCardIndex = readCardIndex(new Scanner(System.in)) - 1;
+            Card chosenCard = currentPlayer.getCards().get(chosenCardIndex);
+            while(!cardCanBePlayed(chosenCard)){
+                System.out.println("This card cannot be played ");
+                chosenCard = currentPlayer.getCards().get(readCardIndex(new Scanner(System.in)) - 1);
+            }
+            currentPlayer.playCard(chosenCard);
+            getDiscardPile().add(chosenCard);
+            setCurrentColor(chosenCard.getColor());
+            checkForUno();
+
+            if(chosenCard instanceof ActionCard){
+                processAction(((ActionCard)chosenCard).getAction());
+            }
+            if (currentPlayer.getNumberOfCards() == 0){
+                // in case there is someone who needs to draw cards before ending the game
+                for(Player player : getPlayers()) checkForPenalty(player);
+                setRoundState(GameState.A_PLAYER_WON);
+                setRoundWinner(currentPlayer);
+                return;
+            }
+            advanceTurn();
+        }
+    }
     @Override
     protected DeckBuilder createDeckBuilder() {
         return new StandardDeckBuilder();
@@ -72,48 +112,7 @@ public class StandardUno extends Game{
         }
         return false;
     }
-    @Override
-    public void playOneRound() {
-        InitializeThePlay();
-        while (true){
-            Player currentPlayer = getCurrentPlayer();
-            System.out.println(currentPlayer.getPenalty().toString());
-            checkForPenalty(getCurrentPlayer());
-            // if current player changed/skipped due to a penalty
-            if (currentPlayer != getCurrentPlayer()) continue;
 
-            printUserInterface();
-            if(!playerHasAnyMatchingCards(currentPlayer)){
-                mandatoryDraw(currentPlayer,1);
-                if (!cardCanBePlayed(peekTopCard(getCurrentPlayer().getCards())))
-                    {advanceTurn();continue;}
-            }
-
-            int chosenCardIndex = readCardIndex(new Scanner(System.in)) - 1;
-            Card chosenCard = currentPlayer.getCards().get(chosenCardIndex);
-            while(!cardCanBePlayed(chosenCard)){
-                System.out.println("This card cannot be played ");
-                chosenCard = currentPlayer.getCards().get(readCardIndex(new Scanner(System.in)) - 1);
-            }
-            currentPlayer.playCard(chosenCard);
-            getDiscardPile().add(chosenCard);
-            setCurrentColor(chosenCard.getColor());
-            checkForUno();
-
-            if(chosenCard instanceof ActionCard){
-                processAction(((ActionCard)chosenCard).getAction());
-            }
-            if (currentPlayer.getNumberOfCards() == 0){
-                for(Player player : getPlayers()){
-                    checkForPenalty(player);
-                }
-                setRoundState(GameState.A_PLAYER_WON);
-                setRoundWinner(currentPlayer);
-                return;
-            }
-            advanceTurn();
-        }
-    }
     @Override
     protected void processAction(Action action) {
         ActionStrategy actionStrategy =  getStrategyRegistry().getActionStrategy(action);

@@ -32,6 +32,7 @@ public abstract class Game {
         discardPile = new ArrayList<>();
         players = new ArrayList<>();
         gameState = GameState.ONGOING;
+        roundState = GameState.ONGOING;
         this.pointsToWin = pointsToWin;
         this.gameDirection = gameDirection;
         strategyRegistry = new StrategyRegistry();

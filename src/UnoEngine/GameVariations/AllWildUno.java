@@ -19,6 +19,36 @@ public class AllWildUno extends Game{
     }
 
     @Override
+    public void playOneRound() {
+        InitializeThePlay();
+        while (getRoundState() == GameState.ONGOING){
+            Player currentPlayer = getCurrentPlayer();
+            checkForPenalty(getCurrentPlayer());
+            if (currentPlayer != getCurrentPlayer()) continue;
+
+            printUserInterface();
+            int chosenCardIndex = readCardIndex(new Scanner(System.in)) - 1;
+            WildActionCard chosenCard = (WildActionCard) currentPlayer.getCards().get(chosenCardIndex);
+            currentPlayer.playCard(chosenCard);
+            getDiscardPile().add(chosenCard);
+            checkForUno();
+
+            if (chosenCard.getAction() != WildAction.WILD)
+                processAction(chosenCard.getAction());
+
+            if (currentPlayer.getNumberOfCards() == 0){
+                for(Player player : getPlayers()){
+                    checkForPenalty(player);
+                }
+                setRoundState(GameState.A_PLAYER_WON);
+                setRoundWinner(currentPlayer);
+                return;
+            }
+            advanceTurn();
+        }
+    }
+
+    @Override
     protected void addRequiredStrategies() {
         // For performing card actions that don't apply penalties to players , or
         // applying penalties for the ones who do ( action strategies )
@@ -65,38 +95,7 @@ public class AllWildUno extends Game{
         return true;
     }
 
-    @Override
-    public void playOneRound() {
-        System.out.println();
-        InitializeThePlay();
-        while (true){
-            Player currentPlayer = getCurrentPlayer();
-            checkForPenalty(getCurrentPlayer());
-            if (currentPlayer != getCurrentPlayer()) continue;
 
-            printUserInterface();
-
-            int chosenCardIndex = readCardIndex(new Scanner(System.in)) - 1;
-            WildActionCard chosenCard = (WildActionCard) currentPlayer.getCards().get(chosenCardIndex);
-            currentPlayer.playCard(chosenCard);
-            getDiscardPile().add(chosenCard);
-            checkForUno();
-
-            if (chosenCard.getAction() != WildAction.WILD)
-                processAction(chosenCard.getAction());
-
-            if (currentPlayer.getNumberOfCards() == 0){
-                for(Player player : getPlayers()){
-                    checkForPenalty(player);
-                }
-                setRoundState(GameState.A_PLAYER_WON);
-                setRoundWinner(currentPlayer);
-                return;
-            }
-
-            advanceTurn();
-        }
-    }
     @Override
     protected void InitializeThePlay(){
         getDrawPile().addAll(getUnoDeck());
@@ -109,7 +108,7 @@ public class AllWildUno extends Game{
     }
     @Override
     protected void processAction(Action action) {
-        ActionStrategy actionStrategy =   getStrategyRegistry().getActionStrategy(action);
+        ActionStrategy actionStrategy = getStrategyRegistry().getActionStrategy(action);
         if (actionStrategy != null)
             actionStrategy.applyAction(this);
     }

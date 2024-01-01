@@ -1,6 +1,7 @@
 package UnoEngine.Strategies.ActionStrategies;
 
 import UnoEngine.Cards.Card;
+import UnoEngine.Enums.GameState;
 import UnoEngine.GameVariations.Game;
 import UnoEngine.Player;
 
@@ -30,5 +31,10 @@ public class ForcedSwapStrategy implements ActionStrategy {
         targetPlayer.setCards(temp);
 
         System.out.println("[Action]    "+game.getCurrentPlayer().getName()+" swapped cards with "+targetPlayer.getName()+" .");
+        // if last card was a forced swap , then the current player is technically
+        // handing the win to another player :)
+        if (temp.isEmpty()){
+            game.setRoundState(GameState.A_PLAYER_WON);
+            game.setRoundWinner(targetPlayer);}
     }
 }
