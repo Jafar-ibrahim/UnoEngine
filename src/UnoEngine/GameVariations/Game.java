@@ -52,12 +52,12 @@ public abstract class Game {
 
     /*-----------------------Non-Final Methods--------------------*/
     protected void greetPlayers(){
-        System.out.println("Welcome to ("+getName()+") Game !!");
+        System.out.println("Welcome to ("+name+") Game !!");
     }
     protected void playRounds() {
         int roundNo = 1;
         while (gameState == GameState.ONGOING){
-            cardDealingStrategy.dealCards(this,4);
+            cardDealingStrategy.dealCards(this,7);
             System.out.println("*********** Round " + roundNo + " started ******************");
 
             playOneRound();
@@ -68,30 +68,30 @@ public abstract class Game {
             }
             printPointsTable();
             roundNo++;
-            resetCards();
+            reclaimCards();
         }
     }
     protected int readCardIndex(Scanner sc) {
         System.out.println("Please enter the index of the card you want to play : \n" +
-                "Note: if you have only 1 card left, immediately type \"uno\"(without double quotes) on a new line.");
+                "Note: if you have only 1 card left, immediately enter \"uno\"(without double quotes) on a new line.");
         int card = readIntegerInput(1,getCurrentPlayer().getNumberOfCards(),sc);
         return card;
     }
     protected void announceRoundResult() {
-        if (getRoundState() == GameState.A_PLAYER_WON) {
+        if (roundState == GameState.A_PLAYER_WON) {
             System.out.println("--> Round winner is : " + roundWinner.getName());
             roundWinner.addPoints(calcRoundPoints(roundWinner));
             for (Player player : players)
                 if (player != roundWinner) player.showCards();
 
-        }else if(getRoundState() == GameState.DRAW) {
+        }else if(roundState == GameState.DRAW) {
             System.out.println("----> Round result is draw !!");
         }
     }
     protected void announceGameResult() {
-        if(getGameState() == GameState.A_PLAYER_WON){
+        if(gameState == GameState.A_PLAYER_WON){
             System.out.println("----> Game winner is : " + getGameWinner().getName() +" !!");
-        }else if(getGameState() == GameState.DRAW) {
+        }else if(gameState == GameState.DRAW) {
             System.out.println("----> Game Result is draw !!");
         }
     }
@@ -133,11 +133,11 @@ public abstract class Game {
         discardPile.clear();
         discardPile.add(topCard);
     }
-    protected void resetCards() {
+    protected void reclaimCards() {
         for(Player player : getPlayers())
-            getUnoDeck().addAll(player.getCards());
-        getUnoDeck().addAll(getDiscardPile());
-        getUnoDeck().addAll(getDrawPile());
+            unoDeck.addAll(player.getCards());
+        unoDeck.addAll(discardPile);
+        unoDeck.addAll(drawPile);
     }
     protected void instantiatePlayers(){
         Scanner sc = new Scanner(System.in);
@@ -160,14 +160,17 @@ public abstract class Game {
                 // Wait for input or until the time limit is reached
             }
             // Check if the player called Uno in time
-            if (System.in.available() > 0 && ("uno".equalsIgnoreCase(scanner.next())
-                                            || scanner.next().contains("uno")
-                                            || scanner.next().contains("UNO"))) {
-                System.out.println("[Announcement]    Player " + getCurrentPlayer().getName() + " called Uno!");
-                return true;
-            } else {
-                return false;
+            if (System.in.available() > 0 ) {
+                String response = scanner.next();
+                if(response.equalsIgnoreCase("uno")
+                        || response.contains("uno")
+                        || response.contains("UNO")){
+                    System.out.println("[Announcement]    Player " + getCurrentPlayer().getName() + " called Uno!");
+                    return true;
+                }else return false;
             }
+            // nothing was typed
+            return false;
 
         }catch (IOException e){
             System.out.println(e.getMessage());
@@ -180,15 +183,15 @@ public abstract class Game {
         setNoOfPlayers(num);
     }
     protected void InitializeThePlay() {
-        getDrawPile().addAll(getUnoDeck());
-        getDiscardPile().clear();
-        Card firstCard = drawAndRemoveCard(getDrawPile());
+        drawPile.addAll(unoDeck);
+        discardPile.clear();
+        Card firstCard = drawAndRemoveCard(drawPile);
 
-        // First card can't be Wild +4
+        // First card can't be Wild +4 In standard UNO
         while(firstCard instanceof WildActionCard && ((WildActionCard)firstCard).getAction() == WildAction.WILD_DRAW_4){
-            getDrawPile().add(firstCard);
-            shuffleCards(getDrawPile());
-            firstCard = drawAndRemoveCard(getDrawPile());
+            drawPile.add(firstCard);
+            shuffleCards(drawPile);
+            firstCard = drawAndRemoveCard(drawPile);
         }
         getDiscardPile().add(firstCard);
         System.out.print("First card put on discard pile is : ");firstCard.print();
@@ -237,8 +240,13 @@ public abstract class Game {
     public final void mandatoryDraw(Player currentPlayer , int noCardsToDraw){
         Scanner sc = new Scanner(System.in);
         System.out.println("You dont have any card that can be played , enter 0 to draw a card : ");
-        while((sc.nextInt()) != 0){
-            System.out.println("Invalid input , please enter 0 to draw a card : ");
+        int num;
+        while(true){
+            num = readIntegerInput(0,currentPlayer.getNumberOfCards(),sc);
+            if (num != 0)
+                System.out.println("Invalid input , please enter 0 to draw a card : ");
+            else
+                break;
         }
         currentPlayer.drawCards(giveCards(noCardsToDraw,drawPile));
         Card drawnCard = peekTopCard(currentPlayer.getCards());
