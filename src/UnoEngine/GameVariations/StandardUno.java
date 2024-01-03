@@ -29,12 +29,8 @@ public class StandardUno extends Game{
                 {advanceTurn();continue;}
             }
 
-            int chosenCardIndex = readCardIndex(new Scanner(System.in)) - 1;
-            Card chosenCard = currentPlayer.getCards().get(chosenCardIndex);
-            while(!cardCanBePlayed(chosenCard)){
-                System.out.println("This card cannot be played ");
-                chosenCard = currentPlayer.getCards().get(readCardIndex(new Scanner(System.in)) - 1);
-            }
+            Card chosenCard = readCardChoice(new Scanner(System.in));
+
             currentPlayer.playCard(chosenCard);
             getDiscardPile().add(chosenCard);
             setCurrentColor(chosenCard.getColor());
@@ -44,7 +40,8 @@ public class StandardUno extends Game{
                 processAction(((ActionCard)chosenCard).getAction());
             }
             if (currentPlayer.getNumberOfCards() == 0){
-                // in case there is someone who needs to draw cards before ending the game
+                // in case there is someone who needs to draw cards before
+                // ending the game (matters in points calculation)
                 for(Player player : getPlayers()) checkForPenalty(player);
                 setRoundState(GameState.A_PLAYER_WON);
                 setRoundWinner(currentPlayer);
@@ -139,6 +136,7 @@ public class StandardUno extends Game{
 
     @Override
     public void decideWhoStarts(){
+        // every player picks a card and the player who got the greater numbered card starts first
         int max = 0;
         for(int i = 0 ; i < getNoOfPlayers() ; i++){
             Card topCard = getUnoDeck().get(getUnoDeck().size()-1-i);

@@ -3,9 +3,7 @@ package UnoEngine.GameVariations;
 import UnoEngine.Cards.*;
 import UnoEngine.Enums.*;
 import UnoEngine.Player;
-import UnoEngine.Strategies.ActionStrategies.ActionStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.CardDealingStrategy;
-import UnoEngine.Strategies.PenaltyStrategies.*;
 import UnoEngine.Strategies.StrategyRegistry;
 
 import java.io.IOException;
@@ -22,8 +20,6 @@ public abstract class Game {
     private GameState gameState , roundState;
     private Player gameWinner, roundWinner;
     private StrategyRegistry strategyRegistry;
-    private ActionStrategy actionStrategy;
-    private PenaltyStrategy penaltyStrategy;
     private CardDealingStrategy cardDealingStrategy;
 
     public Game(int pointsToWin , GameDirection gameDirection) {
@@ -72,11 +68,17 @@ public abstract class Game {
             reclaimCards();
         }
     }
-    protected int readCardIndex(Scanner sc) {
+    protected Card readCardChoice(Scanner sc) {
         System.out.println("Please enter the index of the card you want to play : \n" +
                 "Note: if you have only 1 card left, immediately enter \"uno\"(without double quotes) on a new line.");
-        int card = readIntegerInput(1,getCurrentPlayer().getNumberOfCards(),sc);
-        return card;
+        int chosenCardIndex = readIntegerInput(1,getCurrentPlayer().getNumberOfCards(),sc) - 1;
+        Card chosenCard = getCurrentPlayer().getCards().get(chosenCardIndex);
+        while(!cardCanBePlayed(chosenCard)){
+            System.out.println("This card cannot be played , choose another one :");
+            chosenCardIndex = readIntegerInput(1,getCurrentPlayer().getNumberOfCards(),sc) - 1 ;
+            chosenCard = getCurrentPlayer().getCards().get(chosenCardIndex);
+        }
+        return chosenCard;
     }
     protected void announceRoundResult() {
         if (roundState == GameState.A_PLAYER_WON) {
@@ -340,10 +342,6 @@ public abstract class Game {
     public List<Card> getDiscardPile() {return discardPile;}
     public int getPointsToWin() {return pointsToWin;}
     public void setPointsToWin(int pointsToWin) {this.pointsToWin = pointsToWin;}
-    public void setActionsApplicationStrategy(ActionStrategy actionStrategy) {this.actionStrategy = actionStrategy;}
-    public ActionStrategy getActionsApplicationStrategy() {return actionStrategy;}
-    public PenaltyStrategy getPenaltiesApplicationStrategy() {return penaltyStrategy;}
-    public void setPenaltiesApplicationStrategy(PenaltyStrategy penaltyStrategy) {this.penaltyStrategy = penaltyStrategy;}
     public CardDealingStrategy getCardDealingStrategy() {return cardDealingStrategy;}
     public void setCardDealingStrategy(CardDealingStrategy cardDealingStrategy) {this.cardDealingStrategy = cardDealingStrategy;}
     public Color getCurrentColor() {return currentColor;}

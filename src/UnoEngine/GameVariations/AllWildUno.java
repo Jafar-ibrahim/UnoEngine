@@ -27,8 +27,7 @@ public class AllWildUno extends Game{
             if (currentPlayer != getCurrentPlayer()) continue;
 
             printUserInterface();
-            int chosenCardIndex = readCardIndex(new Scanner(System.in)) - 1;
-            WildActionCard chosenCard = (WildActionCard) currentPlayer.getCards().get(chosenCardIndex);
+            WildActionCard chosenCard = (WildActionCard) readCardChoice(new Scanner(System.in));
             currentPlayer.playCard(chosenCard);
             getDiscardPile().add(chosenCard);
             checkForUno();
