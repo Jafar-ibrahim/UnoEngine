@@ -4,20 +4,24 @@ import UnoEngine.Enums.GameDirection;
 import UnoEngine.Enums.NormalAction;
 import UnoEngine.Enums.StandardPenalty;
 import UnoEngine.GameVariations.Game;
+import UnoEngine.GameVariations.GameContext;
+import UnoEngine.GameVariations.GameStateManager;
 
 public class ReverseActionStrategy implements ActionStrategy {
     @Override
-    public void applyAction(Game game) {
-        if(game.getGameDirection() == GameDirection.CLOCKWISE)
-            game.setGameDirection(GameDirection.COUNTER_CLOCKWISE);
+    public void applyAction(GameContext gameContext) {
+        GameStateManager gameStateManager = gameContext.getGameStateManager();
+        if(gameStateManager.getGameDirection() == GameDirection.CLOCKWISE)
+            gameStateManager.setGameDirection(GameDirection.COUNTER_CLOCKWISE);
         else
-            game.setGameDirection(GameDirection.CLOCKWISE);
+            gameStateManager.setGameDirection(GameDirection.CLOCKWISE);
 
         System.out.println("[Action]    Game direction got reversed");
 
         // In case the number of players is 2 , reverse action becomes a skip penalty to the other player
-        if(game.getNoOfPlayers() == 2 ){
-            new PenaltyAssignmentStrategy(NormalAction.REVERSE,game.getNextPlayer(1)).applyAction(game);
+        if(gameContext.getPlayersManager().getNoOfPlayers() == 2 ){
+            new PenaltyAssignmentStrategy(NormalAction.REVERSE , gameContext.getTurnManager().getNextPlayer(1))
+                                        .applyAction(gameContext);
         }
     }
 }

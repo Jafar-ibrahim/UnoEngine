@@ -6,6 +6,7 @@ import UnoEngine.Enums.NormalAction;
 import UnoEngine.Enums.StandardPenalty;
 import UnoEngine.Enums.WildAction;
 import UnoEngine.GameVariations.Game;
+import UnoEngine.GameVariations.GameContext;
 import UnoEngine.Player;
 
 public class PenaltyAssignmentStrategy implements ActionStrategy {
@@ -27,8 +28,8 @@ public class PenaltyAssignmentStrategy implements ActionStrategy {
     }
 
     @Override
-    public void applyAction(Game game) {
-        if (targetPlayer == null) targetPlayer = game.getNextPlayer(1);
+    public void applyAction(GameContext gameContext) {
+        if (targetPlayer == null) targetPlayer = gameContext.getTurnManager().getNextPlayer(1);
         targetPlayer.setPenalty(action.getAssociatedPenalty());
     }
 }

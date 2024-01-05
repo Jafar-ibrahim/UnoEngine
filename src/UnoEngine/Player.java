@@ -51,10 +51,13 @@ public class Player {
     }
     public void showCards() {
         System.out.println("Player ("+getName()+")'s cards : ");
-        for (int i = 0; i < cards.size(); i++) {
-            System.out.print((i + 1) + " - ");
-            cards.get(i).print();
-        }
+        if (cards.isEmpty()) {
+            System.out.print(" N/A");
+        }else
+            for (int i = 0; i < cards.size(); i++) {
+                System.out.print((i + 1) + " - ");
+                cards.get(i).print();
+            }
     }
     public Penalty getPenalty() {
         return penalty;

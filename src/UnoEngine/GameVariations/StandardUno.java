@@ -1,40 +1,56 @@
 package UnoEngine.GameVariations;
 import UnoEngine.Cards.*;
 import UnoEngine.Enums.*;
+import UnoEngine.InputOutputManager;
 import UnoEngine.Player;
+import UnoEngine.PlayersManager;
 import UnoEngine.Strategies.ActionStrategies.*;
 import UnoEngine.Strategies.CardDealingStrategies.CardDealingStrategy;
 import UnoEngine.Strategies.CardDealingStrategies.StandardCardDealingStrategy;
 import UnoEngine.Strategies.PenaltyStrategies.*;
+import UnoEngine.Strategies.StrategyRegistry;
 
 import java.util.Scanner;
 public class StandardUno extends Game{
-    public StandardUno(int pointsToWin , GameDirection gameDirection) {
-        super(pointsToWin,gameDirection);
+    public StandardUno(int pointsToWin ) {
+        this.pointsToWin = pointsToWin;
         setName("Standard Uno");
+        cardManager = CardManager.getInstance();
+        playersManager = PlayersManager.getInstance();
+        gameStateManager = GameStateManager.getInstance();
+        inputOutputManager = InputOutputManager.getInstance();
+        turnManager = TurnManager.getInstance();
+        strategyRegistry = StrategyRegistry.getInstance();
     }
 
     @Override
     public void playOneRound() {
         InitializeThePlay();
-        while (getRoundState() == GameState.ONGOING){
-            Player currentPlayer = getCurrentPlayer();
-            checkForPenalty(getCurrentPlayer());
-            // if current player changed/skipped due to a penalty
-            if (currentPlayer != getCurrentPlayer()) continue;
-            printUserInterface();
+        while (getGameStateManager().roundIsOngoing()){
+            Player currentPlayer = getTurnManager().getCurrentPlayer();
+            checkForPenalty(currentPlayer);
+
+            // if current player changed/skipped due to a penalty then skip this iteration
+            if (currentPlayer != getTurnManager().getCurrentPlayer()) continue;
+
+            getInputOutputManager().printUserInterface();
+
             if(!playerHasAnyMatchingCards(currentPlayer)){
-                mandatoryDraw(currentPlayer,1);
-                if (!cardCanBePlayed(peekTopCard(getCurrentPlayer().getCards())))
-                {advanceTurn();continue;}
+                Card drawnCard= mandatoryDraw(currentPlayer,1);
+                if (!cardManager.cardCanBePlayed(drawnCard,currentPlayer)) {
+                    turnManager.advanceTurn();
+                    continue;
+                }
             }
 
-            Card chosenCard = readCardChoice(new Scanner(System.in));
+            Card chosenCard = inputOutputManager.readCardChoice(currentPlayer);
 
             currentPlayer.playCard(chosenCard);
-            getDiscardPile().add(chosenCard);
-            setCurrentColor(chosenCard.getColor());
-            checkForUno();
+
+            getCardManager().discardCard(chosenCard);
+            gameStateManager.setCurrentColor(chosenCard.getColor());
+
+            checkForUno(currentPlayer);
 
             if(chosenCard instanceof ActionCard){
                 processAction(((ActionCard)chosenCard).getAction());
@@ -42,13 +58,19 @@ public class StandardUno extends Game{
             if (currentPlayer.getNumberOfCards() == 0){
                 // in case there is someone who needs to draw cards before
                 // ending the game (matters in points calculation)
-                for(Player player : getPlayers()) checkForPenalty(player);
-                setRoundState(GameState.A_PLAYER_WON);
-                setRoundWinner(currentPlayer);
+                for(Player player : getPlayersManager().getPlayers()) checkForPenalty(player);
+                gameStateManager.setRoundState(GameState.A_PLAYER_WON);
+                gameStateManager.setRoundWinner(currentPlayer);
                 return;
             }
-            advanceTurn();
+            turnManager.advanceTurn();
         }
+    }
+
+    public void InitializeThePlay(){
+        Card firstCard = getCardManager().peekTopDiscardPile();
+        if(firstCard instanceof ActionCard)
+            processFirstCardInGame(firstCard);
     }
     @Override
     protected DeckBuilder createDeckBuilder() {
@@ -77,7 +99,7 @@ public class StandardUno extends Game{
     @Override
     public int calcRoundPoints(Player winner) {
         int points = 0;
-        for(Player player : getPlayers()){
+        for(Player player : playersManager.getPlayers()){
             if(player != winner)
                 for(Card card : player.getCards())
                     points += card.getValue();
@@ -85,49 +107,22 @@ public class StandardUno extends Game{
         System.out.println("Winner got  : "+points+" points !");
         return points;
     }
-    @Override
-    public boolean cardCanBePlayed(Card card){
-        Card topDiscard = peekTopCard(getDiscardPile());
-        if(card instanceof WildActionCard){
-            if (((WildActionCard) card).getAction() == WildAction.WILD_DRAW_4){
-                for (Card otherCard : getCurrentPlayer().getCards()) {
-                    if (otherCard instanceof WildActionCard)
-                        continue;
-                    // wild+4 can be only played if no colored card can be played
-                    if (cardCanBePlayed(otherCard))
-                        return false;
-                }
-            }
-            return true;
-        }else{
-            if(card.getColor() == getCurrentColor()) return true;
-            else if (card instanceof NormalActionCard && topDiscard instanceof NormalActionCard) {
-                return ((NormalActionCard) card).getAction() == ((NormalActionCard) topDiscard).getAction();
-            }else if(card instanceof NumberedCard){
-                return card.getValue() == topDiscard.getValue();
-            }
-        }
-        return false;
-    }
+
 
     @Override
     protected void processAction(Action action) {
         ActionStrategy actionStrategy =  getStrategyRegistry().getActionStrategy(action);
         if (actionStrategy != null)
-            actionStrategy.applyAction(this);
+            actionStrategy.applyAction(GameContext.getInstance());
     }
     @Override
     protected void processPenalty(Penalty penalty , Player targetPlayer) {
-        getCurrentPlayer().setPenalty(StandardPenalty.NONE);
+        targetPlayer.setPenalty(StandardPenalty.NONE);
         PenaltyStrategy penaltyStrategy = getStrategyRegistry().getPenaltyStrategy(penalty);
-        penaltyStrategy.applyPenalty(this,targetPlayer);    }
-
-    public void printUserInterface(){
-        Card topDiscard = peekTopCard(getDiscardPile());
-        System.out.println("------------------ "+getCurrentPlayer().getName()+" turn ------------------");
-        System.out.print("Current color : "+getCurrentColor()+"\nTop card on discard pile is : ");topDiscard.print();
-        getCurrentPlayer().showCards();
+        penaltyStrategy.applyPenalty(GameContext.getInstance(),targetPlayer);
     }
+
+
     public void checkForPenalty(Player targetPlayer){
         if(targetPlayer.getPenalty() != StandardPenalty.NONE){
             processPenalty(targetPlayer.getPenalty(),targetPlayer);
@@ -138,16 +133,17 @@ public class StandardUno extends Game{
     public void decideWhoStarts(){
         // every player picks a card and the player who got the greater numbered card starts first
         int max = 0;
-        for(int i = 0 ; i < getNoOfPlayers() ; i++){
-            Card topCard = getUnoDeck().get(getUnoDeck().size()-1-i);
+        for(int i = 0 ; i < playersManager.getNoOfPlayers() ; i++){
+            Card topCard = cardManager.drawAndRemoveCard(cardManager.getUnoDeck());
+            //Card topCard = getUnoDeck().get(getUnoDeck().size()-1-i);
             if (topCard instanceof NumberedCard) {
                 if (topCard.getValue() > max){
                     max = topCard.getValue();
-                    setCurrentPlayerPosition(i);
+                    turnManager.setCurrentPlayerPosition(i);
                 }
             }// any other card type (action/wild) is valued 0
         }
-        shuffleCards(getUnoDeck());
-        System.out.println(getPlayers().get(getCurrentPlayerPosition()).getName() +" starts first ");
+        cardManager.shuffleDeck();
+        System.out.println(turnManager.getCurrentPlayer().getName() +" starts first ");
     }
 }

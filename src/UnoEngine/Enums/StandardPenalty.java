@@ -4,7 +4,9 @@ import UnoEngine.GameVariations.Game;
 import UnoEngine.Player;
 
 public enum StandardPenalty implements Penalty{
-    NONE {
+    NONE, SKIP , DRAW_2 , DRAW_4 , FORGOT_UNO;
+
+    /*NONE {
         @Override
         public void applyPenaltyHelper(Game game, Player targetPlayer) {
 
@@ -43,5 +45,5 @@ public enum StandardPenalty implements Penalty{
     public void applyPenalty(Game game , Player targetPlayer) {
         applyPenaltyHelper(game,targetPlayer);
     }
-    public abstract void applyPenaltyHelper(Game game , Player targetPlayer);
+    public abstract void applyPenaltyHelper(Game game , Player targetPlayer);*/
 }

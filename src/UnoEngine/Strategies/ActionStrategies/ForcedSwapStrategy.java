@@ -1,8 +1,12 @@
 package UnoEngine.Strategies.ActionStrategies;
 
 import UnoEngine.Cards.Card;
+import UnoEngine.Cards.CardManager;
 import UnoEngine.Enums.GameState;
 import UnoEngine.GameVariations.Game;
+import UnoEngine.GameVariations.GameContext;
+import UnoEngine.GameVariations.GameStateManager;
+import UnoEngine.InputOutputManager;
 import UnoEngine.Player;
 
 import java.util.List;
@@ -10,31 +14,26 @@ import java.util.Scanner;
 
 public class ForcedSwapStrategy implements ActionStrategy {
     @Override
-    public void applyAction(Game game) {
-        System.out.println("Forced swap !! this is the number of cards of each player : ");
-        int i = 1;
-        for(Player player:game.getPlayers())
-            System.out.println(i++ +"- "+player.getName()+" : "+player.getNumberOfCards() +" cards");
-        System.out.println("Enter the number(index) of the player you want to swap cards with : ");
-        Player targetPlayer;
-        while (true){
-            int targetPlayerIndex = game.readIntegerInput(1, game.getNoOfPlayers(), new Scanner(System.in)) - 1;
-            targetPlayer = game.getPlayers().get(targetPlayerIndex);
-            if (targetPlayer == game.getCurrentPlayer())
-                System.out.println("You cant swap with yourself , please choose another player : ");
-            else
-                break;
-        }
+    public void applyAction(GameContext gameContext) {
 
-        List<Card> temp = game.getCurrentPlayer().getCards();
-        game.getCurrentPlayer().setCards(targetPlayer.getCards());
+        Player CurrentPlayer = gameContext.getTurnManager().getCurrentPlayer();
+        System.out.println("Forced swap !! this is the number of cards of each player : ");
+
+        Player targetPlayer = gameContext.getInputOutputManager().readPlayerChoice();
+
+        // swapping
+        List<Card> temp = CurrentPlayer.getCards();
+        CurrentPlayer.setCards(targetPlayer.getCards());
         targetPlayer.setCards(temp);
 
-        System.out.println("[Action]    "+game.getCurrentPlayer().getName()+" swapped cards with "+targetPlayer.getName()+" .");
+        System.out.println("[Action]    "+CurrentPlayer.getName()+" swapped cards with "+targetPlayer.getName()+" .");
+
         // if last card was a forced swap , then the current player is technically
         // handing the win to another player :)
+        GameStateManager gameStateManager = gameContext.getGameStateManager();
         if (temp.isEmpty()){
-            game.setRoundState(GameState.A_PLAYER_WON);
-            game.setRoundWinner(targetPlayer);}
+            gameStateManager.setRoundState(GameState.A_PLAYER_WON);
+            gameStateManager.setRoundWinner(targetPlayer);
+        }
     }
 }

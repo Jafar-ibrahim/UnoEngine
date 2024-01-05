@@ -9,10 +9,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StrategyRegistry {
-    Map<Penalty , PenaltyStrategy> penaltyStrategies;
-    Map<Action , ActionStrategy> actionStrategies;
+    private Map<Penalty , PenaltyStrategy> penaltyStrategies;
+    private Map<Action , ActionStrategy> actionStrategies;
 
-    public StrategyRegistry() {
+    private static StrategyRegistry instance;
+
+    public static StrategyRegistry getInstance(){
+        if(instance == null)
+            instance = new StrategyRegistry();
+        return instance;
+    }
+    private StrategyRegistry() {
         penaltyStrategies = new HashMap<>();
         actionStrategies =  new HashMap<>();
     }
